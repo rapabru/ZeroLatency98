@@ -2,7 +2,14 @@
 
 > **Mantener Windows 11 moderno y funcional, pero hacer que el desktop sea lo más estático, simple y poco intrusivo posible cuando se necesita máxima capacidad de respuesta del sistema.**
 
+[![GitHub Release](https://img.shields.io/github/v/release/rapabru/theme-98)](https://github.com/rapabru/theme-98/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Una herramienta de precisión para Windows 11 diseñada bajo los principios de **latencia mínima, reversibilidad estricta y reducción medible de interferencias del sistema operativo**, encapsulada en una interfaz clásica inspirada en **Windows 95/98/2000**.
+
+### ⬇️ [Descargar la última versión (Releases)](https://github.com/rapabru/theme-98/releases/latest)
+- **Standalone x64 (`DesktopPerformance-v1.0.0-win-x64-standalone.zip`):** No requiere instalar runtimes ni dependencias. Descargar, descomprimir y ejecutar directamente en Windows 11.
+- **Portable Edition (`DesktopPerformance-v1.0.0-portable.zip`):** Paquete ligero de ~600 KB (requiere .NET 9).
 
 ---
 
