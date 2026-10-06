@@ -46,3 +46,6 @@ snapshot_test_*.json
 Thumbs.db
 Desktop.ini
 $RECYCLE.BIN/
+
+*.zip
+bin/Publish-SingleFile/
