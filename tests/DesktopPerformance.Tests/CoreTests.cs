@@ -160,4 +160,102 @@ public class CoreTests
         Assert.Contains("Measurable reduction detected", comp2.SummaryText);
         Assert.Contains("Context switches reduced by 75.0%", comp2.SummaryText);
     }
+
+    [Fact]
+    public void DesktopBusyAnalyzer_ReturnsValidDiagnosticFindings()
+    {
+        var hwInspector = new HardwareInspector();
+        var analyzer = new DesktopBusyAnalyzer(hwInspector);
+
+        var findings = analyzer.AnalyzeCurrentInterference();
+        Assert.NotNull(findings);
+        Assert.NotEmpty(findings);
+
+        foreach (var f in findings)
+        {
+            Assert.False(string.IsNullOrWhiteSpace(f.Category));
+            Assert.False(string.IsNullOrWhiteSpace(f.HumanExplanation));
+        }
+    }
+
+    [Fact]
+    public void SmartProfileManager_FindsMatchingProfileForGameTrigger()
+    {
+        string tempProfilesPath = Path.Combine(Path.GetTempPath(), $"smart_profiles_test_{Guid.NewGuid():N}.json");
+        try
+        {
+            var manager = new SmartProfileManager(tempProfilesPath);
+            Assert.NotEmpty(manager.Profiles);
+
+            // CS2 trigger test
+            var cs2Profile = manager.FindProfileForProcess("cs2.exe");
+            Assert.NotNull(cs2Profile);
+            Assert.Equal("CS2 / Competitive Gaming", cs2Profile.Name);
+            Assert.True(cs2Profile.IsolateCpuCores);
+            Assert.True(cs2Profile.DisableTransparency);
+
+            // Case insensitive and without .exe
+            var cs2WithoutExe = manager.FindProfileForProcess("cs2");
+            Assert.NotNull(cs2WithoutExe);
+            Assert.Equal(cs2Profile.Id, cs2WithoutExe.Id);
+        }
+        finally
+        {
+            if (File.Exists(tempProfilesPath)) File.Delete(tempProfilesPath);
+        }
+    }
+
+    [Fact]
+    public void BackgroundDatabase_ContainsComprehensiveClassifiedEntries()
+    {
+        var db = new BackgroundDatabase();
+        var entries = db.GetAllEntries();
+
+        Assert.NotEmpty(entries);
+        Assert.Contains(entries, e => e.ProcessName == "OneDrive" && e.Classification == SafetyClassification.Safe);
+        Assert.Contains(entries, e => e.ProcessName == "Discord" && e.Classification == SafetyClassification.LowRisk);
+        Assert.Contains(entries, e => e.ProcessName == "steam" && e.Classification == SafetyClassification.DoNotTouch);
+        Assert.Contains(entries, e => e.ProcessName == "dwm" && e.Classification == SafetyClassification.DoNotTouch);
+        Assert.Contains(entries, e => e.ProcessName == "Corsair.Service" && e.Classification == SafetyClassification.MediumRisk);
+    }
+
+    [Fact]
+    public void ExportManager_ExportsAndImportsProfilesAndBenchmark()
+    {
+        var exporter = new ExportManager();
+        string tempBenchPath = Path.Combine(Path.GetTempPath(), $"bench_export_{Guid.NewGuid():N}.json");
+        string tempProfilesPath = Path.Combine(Path.GetTempPath(), $"profiles_export_{Guid.NewGuid():N}.json");
+
+        try
+        {
+            var comparison = new BenchmarkComparison
+            {
+                Before = new BenchmarkMetric { CpuLoadPercentage = 10, ContextSwitchesPerSecond = 5000 },
+                After = new BenchmarkMetric { CpuLoadPercentage = 5, ContextSwitchesPerSecond = 2000 }
+            };
+
+            bool benchOk = exporter.ExportBenchmarkSession(comparison, tempBenchPath);
+            Assert.True(benchOk);
+            Assert.True(File.Exists(tempBenchPath));
+
+            var profiles = new List<SmartProfile>
+            {
+                new SmartProfile { Name = "Test Profile", TriggerProcessName = "test.exe" }
+            };
+
+            bool profOk = exporter.ExportProfiles(profiles, tempProfilesPath);
+            Assert.True(profOk);
+            Assert.True(File.Exists(tempProfilesPath));
+
+            var imported = exporter.ImportProfiles(tempProfilesPath);
+            Assert.NotNull(imported);
+            Assert.Single(imported);
+            Assert.Equal("Test Profile", imported[0].Name);
+        }
+        finally
+        {
+            if (File.Exists(tempBenchPath)) File.Delete(tempBenchPath);
+            if (File.Exists(tempProfilesPath)) File.Delete(tempProfilesPath);
+        }
+    }
 }

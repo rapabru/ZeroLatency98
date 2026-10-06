@@ -13,6 +13,13 @@ public class MainForm : Form
     private readonly SnapshotManager _snapshotManager;
     private readonly ProfileEngine _profileEngine;
     private readonly BenchmarkEngine _benchmarkEngine;
+    private readonly SmartProfileManager _smartProfileManager;
+    private readonly ProcessWatcher _processWatcher;
+    private readonly DesktopBusyAnalyzer _diagnosticAnalyzer;
+    private readonly BackgroundDatabase _backgroundDatabase;
+    private readonly ExportManager _exportManager;
+
+    private BenchmarkComparison? _lastBenchmarkComparison;
 
     // UI Controls
     private MenuStrip _menuStrip = null!;
@@ -47,6 +54,17 @@ public class MainForm : Form
     private Label _lblBenchmarkStatus = null!;
     private ListView _lvBenchmarkResults = null!;
     private TextBox _txtBenchmarkVerdict = null!;
+    private RetroButton _btnExportBenchmark = null!;
+
+    // Tab 5: Phase 3 Diagnostics & Smart Profiles
+    private ListView _lvDiagnosticFindings = null!;
+    private RetroButton _btnRunDiagnostic = null!;
+    private RadioButton _rbAutoGame = null!;
+    private RadioButton _rbManualGame = null!;
+    private RadioButton _rbDisabledGame = null!;
+    private Label _lblWatcherStatus = null!;
+    private ListView _lvSmartProfiles = null!;
+    private RetroButton _btnApplySmartProfile = null!;
 
     // Status bar
     private StatusStrip _statusStrip = null!;
@@ -63,10 +81,71 @@ public class MainForm : Form
         _snapshotManager = new SnapshotManager();
         _profileEngine = new ProfileEngine(_visualEffects, _services, _processes, _snapshotManager);
         _benchmarkEngine = new BenchmarkEngine();
+        _smartProfileManager = new SmartProfileManager();
+        _processWatcher = new ProcessWatcher(_smartProfileManager, _profileEngine);
+        _diagnosticAnalyzer = new DesktopBusyAnalyzer(_hardwareInspector);
+        _backgroundDatabase = new BackgroundDatabase();
+        _exportManager = new ExportManager();
 
         InitializeComponent();
         _profileEngine.Initialize();
+        SetupProcessWatcher();
         RefreshAllData();
+    }
+
+    private void SetupProcessWatcher()
+    {
+        _processWatcher.OnGameStarted += (proc, profile) =>
+        {
+            if (InvokeRequired)
+            {
+                Invoke(() => HandleGameStarted(proc, profile));
+                return;
+            }
+            HandleGameStarted(proc, profile);
+        };
+
+        _processWatcher.OnGameExited += (proc) =>
+        {
+            if (InvokeRequired)
+            {
+                Invoke(() => HandleGameExited(proc));
+                return;
+            }
+            HandleGameExited(proc);
+        };
+
+        _processWatcher.OnGameDetectedManual += (proc, profile) =>
+        {
+            if (InvokeRequired)
+            {
+                Invoke(() => AppendLog($"[AUTO-DETECTOR] Registered game detected: {proc}. Mode is MANUAL (no action forced)."));
+                return;
+            }
+            AppendLog($"[AUTO-DETECTOR] Registered game detected: {proc}. Mode is MANUAL (no action forced).");
+        };
+
+        _processWatcher.Start(2000);
+    }
+
+    private void HandleGameStarted(string proc, SmartProfile profile)
+    {
+        AppendLog($"[AUTO-DETECTOR] Process '{proc}' started! Automatically applied profile: '{profile.Name}'.");
+        _lblWatcherStatus.Text = $"Active Game Hook: {proc} (Profile: {profile.Name})";
+        RefreshAllData();
+    }
+
+    private void HandleGameExited(string proc)
+    {
+        AppendLog($"[AUTO-DETECTOR] Process '{proc}' exited. Automatically restored NORMAL baseline.");
+        _lblWatcherStatus.Text = "Active Game Hook: Idle (Watching for registered games...)";
+        RefreshAllData();
+    }
+
+    protected override void OnFormClosing(FormClosingEventArgs e)
+    {
+        _processWatcher.Dispose();
+        base.OnFormClosing(e);
     }
 
     private void InitializeComponent()
@@ -74,9 +153,9 @@ public class MainForm : Form
         SuspendLayout();
 
         Text = "Desktop Performance - Low-Interference Mode [Win98]";
-        Width = 840;
-        Height = 650;
-        MinimumSize = new Size(780, 580);
+        Width = 860;
+        Height = 670;
+        MinimumSize = new Size(800, 600);
         StartPosition = FormStartPosition.CenterScreen;
         BackColor = RetroTheme.BackgroundColor;
         Font = RetroTheme.DefaultFont;
@@ -91,7 +170,10 @@ public class MainForm : Form
         };
 
         var fileMenu = new ToolStripMenuItem("&File");
-        fileMenu.DropDownItems.Add("&Refresh All", null, (s, e) => RefreshAllData());
+        fileMenu.DropDownItems.Add("&Refresh All Data", null, (s, e) => RefreshAllData());
+        fileMenu.DropDownItems.Add(new ToolStripSeparator());
+        fileMenu.DropDownItems.Add("&Export Benchmark JSON...", null, (s, e) => ExportBenchmark());
+        fileMenu.DropDownItems.Add("&Export Profiles JSON...", null, (s, e) => ExportProfiles());
         fileMenu.DropDownItems.Add(new ToolStripSeparator());
         fileMenu.DropDownItems.Add("E&xit", null, (s, e) => Close());
 
@@ -102,6 +184,10 @@ public class MainForm : Form
         profilesMenu.DropDownItems.Add(new ToolStripSeparator());
         profilesMenu.DropDownItems.Add("&Restore to Normal (Undo All)", null, async (s, e) => await RestoreToNormal());
 
+        var diagMenu = new ToolStripMenuItem("&Diagnostics");
+        diagMenu.DropDownItems.Add("&Why Is My Desktop Busy?", null, (s, e) => RunDesktopDiagnostic());
+        diagMenu.DropDownItems.Add("&Process Safety Database...", null, (s, e) => ShowProcessDatabaseDialog());
+
         var helpMenu = new ToolStripMenuItem("&Help");
         helpMenu.DropDownItems.Add("&About Win98 Desktop Performance Mode", null, (s, e) =>
         {
@@ -109,11 +195,11 @@ public class MainForm : Form
                 "Desktop Performance & Low-Interference Mode\n\n" +
                 "Authentic Windows 98/2000 Retro Aesthetics for Windows 11.\n" +
                 "Zero bloat, zero placebo, transactional snapshots with 1-click restore.\n\n" +
-                "Version 1.0 (Phase 2 MVP)",
+                "Version 1.0 (Phase 2 & Phase 3 Advanced)",
                 "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
         });
 
-        _menuStrip.Items.AddRange(new ToolStripItem[] { fileMenu, profilesMenu, helpMenu });
+        _menuStrip.Items.AddRange(new ToolStripItem[] { fileMenu, profilesMenu, diagMenu, helpMenu });
 
         // 2. Banner Panel
         _bannerPanel = new Panel
@@ -156,6 +242,7 @@ public class MainForm : Form
         BuildProfilesTab();
         BuildBackgroundManagerTab();
         BuildBenchmarkTab();
+        BuildDiagnosticsAndSmartProfilesTab();
 
         // 5. StatusStrip
         _statusStrip = new StatusStrip
@@ -507,20 +594,28 @@ public class MainForm : Form
                    "Este módulo toma muestras antes y después de aplicar el perfil. Si la diferencia es menor al 2.0%,\n" +
                    "se reportará honestamente: 'No measurable improvement detected'.",
             Location = new Point(12, 22),
-            Size = new Size(620, 52),
+            Size = new Size(480, 52),
             Font = RetroTheme.DefaultFont
         };
 
         _btnRunBenchmark = new RetroButton
         {
-            Text = "[ RUN BEFORE / AFTER BENCHMARK ]",
-            Location = new Point(640, 26),
+            Text = "[ RUN BENCHMARK ]",
+            Location = new Point(500, 26),
             Size = new Size(150, 44),
             Font = RetroTheme.BoldFont
         };
         _btnRunBenchmark.Click += async (s, e) => await RunBenchmarkAsync();
 
-        pnlHeader.Controls.AddRange(new Control[] { lblNotice, _btnRunBenchmark });
+        _btnExportBenchmark = new RetroButton
+        {
+            Text = "Export JSON",
+            Location = new Point(660, 26),
+            Size = new Size(120, 44)
+        };
+        _btnExportBenchmark.Click += (s, e) => ExportBenchmark();
+
+        pnlHeader.Controls.AddRange(new Control[] { lblNotice, _btnRunBenchmark, _btnExportBenchmark });
 
         _lblBenchmarkStatus = new Label
         {
@@ -572,6 +667,317 @@ public class MainForm : Form
         tab.Controls.Add(pnlHeader);
 
         _tabControl.TabPages.Add(tab);
+    }
+    #endregion
+
+    #region Tab 5: Phase 3 Diagnostics & Smart Profiles
+    private void BuildDiagnosticsAndSmartProfilesTab()
+    {
+        var tab = new TabPage("Diagnostics & Smart Profiles")
+        {
+            BackColor = RetroTheme.BackgroundColor,
+            Padding = new Padding(8)
+        };
+
+        // Section A: Why is my desktop busy?
+        var grpDiagnostic = new GroupBox
+        {
+            Text = "Diagnostic: Why Is My Desktop Busy?",
+            Dock = DockStyle.Top,
+            Height = 220,
+            Font = RetroTheme.BoldFont
+        };
+
+        var pnlDiagTop = new Panel
+        {
+            Dock = DockStyle.Top,
+            Height = 36
+        };
+
+        _btnRunDiagnostic = new RetroButton
+        {
+            Text = "[ Run Interference Diagnostic ]",
+            Location = new Point(4, 4),
+            Size = new Size(220, 28),
+            Font = RetroTheme.BoldFont
+        };
+        _btnRunDiagnostic.Click += (s, e) => RunDesktopDiagnostic();
+        pnlDiagTop.Controls.Add(_btnRunDiagnostic);
+
+        _lvDiagnosticFindings = new ListView
+        {
+            Dock = DockStyle.Fill,
+            View = View.Details,
+            FullRowSelect = true,
+            GridLines = true,
+            Font = RetroTheme.DefaultFont,
+            BorderStyle = BorderStyle.Fixed3D
+        };
+        _lvDiagnosticFindings.Columns.Add("Category", 130);
+        _lvDiagnosticFindings.Columns.Add("Component / App", 150);
+        _lvDiagnosticFindings.Columns.Add("Human Explanation", 360);
+        _lvDiagnosticFindings.Columns.Add("Recommended Action", 170);
+
+        grpDiagnostic.Controls.Add(_lvDiagnosticFindings);
+        grpDiagnostic.Controls.Add(pnlDiagTop);
+
+        // Section B: Smart Profiles & Auto Game Detection
+        var grpSmartProfiles = new GroupBox
+        {
+            Text = "Smart Profiles & Auto Game Detection",
+            Dock = DockStyle.Fill,
+            Font = RetroTheme.BoldFont
+        };
+
+        var pnlSmartTop = new Panel
+        {
+            Dock = DockStyle.Top,
+            Height = 60
+        };
+
+        var lblMode = new Label
+        {
+            Text = "Game Detection Mode:",
+            Location = new Point(4, 6),
+            Size = new Size(140, 20),
+            Font = RetroTheme.BoldFont
+        };
+
+        _rbAutoGame = new RadioButton
+        {
+            Text = "AUTO (Auto-apply on launch, auto-restore on exit)",
+            Location = new Point(150, 4),
+            Size = new Size(330, 20),
+            Checked = true,
+            Font = RetroTheme.DefaultFont
+        };
+        _rbAutoGame.CheckedChanged += (s, e) =>
+        {
+            if (_rbAutoGame.Checked) _processWatcher.Mode = AutoGameDetectionMode.Auto;
+        };
+
+        _rbManualGame = new RadioButton
+        {
+            Text = "MANUAL (Prompt only)",
+            Location = new Point(490, 4),
+            Size = new Size(160, 20),
+            Font = RetroTheme.DefaultFont
+        };
+        _rbManualGame.CheckedChanged += (s, e) =>
+        {
+            if (_rbManualGame.Checked) _processWatcher.Mode = AutoGameDetectionMode.Manual;
+        };
+
+        _rbDisabledGame = new RadioButton
+        {
+            Text = "DISABLED",
+            Location = new Point(660, 4),
+            Size = new Size(90, 20),
+            Font = RetroTheme.DefaultFont
+        };
+        _rbDisabledGame.CheckedChanged += (s, e) =>
+        {
+            if (_rbDisabledGame.Checked) _processWatcher.Mode = AutoGameDetectionMode.Disabled;
+        };
+
+        _lblWatcherStatus = new Label
+        {
+            Text = "Active Game Hook: Idle (Watching for registered games like CS2, OBS, Premiere...)",
+            Location = new Point(4, 30),
+            Size = new Size(600, 22),
+            Font = RetroTheme.DefaultFont,
+            ForeColor = Color.DarkBlue
+        };
+
+        pnlSmartTop.Controls.AddRange(new Control[] { lblMode, _rbAutoGame, _rbManualGame, _rbDisabledGame, _lblWatcherStatus });
+
+        _lvSmartProfiles = new ListView
+        {
+            Dock = DockStyle.Fill,
+            View = View.Details,
+            FullRowSelect = true,
+            GridLines = true,
+            Font = RetroTheme.DefaultFont,
+            BorderStyle = BorderStyle.Fixed3D
+        };
+        _lvSmartProfiles.Columns.Add("Profile Name", 190);
+        _lvSmartProfiles.Columns.Add("Trigger Process", 130);
+        _lvSmartProfiles.Columns.Add("Description", 350);
+        _lvSmartProfiles.Columns.Add("CPU Isolation", 100);
+
+        var pnlSmartBottom = new Panel
+        {
+            Dock = DockStyle.Bottom,
+            Height = 36
+        };
+
+        _btnApplySmartProfile = new RetroButton
+        {
+            Text = "Apply Selected Smart Profile",
+            Location = new Point(4, 4),
+            Size = new Size(200, 28)
+        };
+        _btnApplySmartProfile.Click += async (s, e) =>
+        {
+            if (_lvSmartProfiles.SelectedItems.Count > 0)
+            {
+                var profileName = _lvSmartProfiles.SelectedItems[0].Text;
+                var prof = _smartProfileManager.Profiles.FirstOrDefault(p => p.Name == profileName);
+                if (prof != null)
+                {
+                    await _profileEngine.ApplyProfileAsync(ProfileType.MaxResponse);
+                    AppendLog($"[SMART-PROFILE] Manually applied profile: {prof.Name}");
+                    RefreshAllData();
+                }
+            }
+        };
+        pnlSmartBottom.Controls.Add(_btnApplySmartProfile);
+
+        grpSmartProfiles.Controls.Add(_lvSmartProfiles);
+        grpSmartProfiles.Controls.Add(pnlSmartBottom);
+        grpSmartProfiles.Controls.Add(pnlSmartTop);
+
+        tab.Controls.Add(grpSmartProfiles);
+        tab.Controls.Add(grpDiagnostic);
+
+        _tabControl.TabPages.Add(tab);
+
+        LoadSmartProfilesList();
+    }
+
+    private void LoadSmartProfilesList()
+    {
+        _lvSmartProfiles.Items.Clear();
+        foreach (var p in _smartProfileManager.Profiles)
+        {
+            var item = new ListViewItem(p.Name);
+            item.SubItems.Add(string.IsNullOrWhiteSpace(p.TriggerProcessName) ? "None" : p.TriggerProcessName);
+            item.SubItems.Add(p.Description);
+            item.SubItems.Add(p.IsolateCpuCores ? "YES" : "No");
+            _lvSmartProfiles.Items.Add(item);
+        }
+    }
+
+    private void RunDesktopDiagnostic()
+    {
+        _lvDiagnosticFindings.Items.Clear();
+        var findings = _diagnosticAnalyzer.AnalyzeCurrentInterference();
+
+        foreach (var f in findings)
+        {
+            var item = new ListViewItem(f.Category);
+            item.SubItems.Add(f.ProcessOrComponent);
+            item.SubItems.Add(f.HumanExplanation);
+            item.SubItems.Add(f.RecommendedAction);
+
+            if (f.IsSevere)
+            {
+                item.ForeColor = Color.DarkRed;
+            }
+            else if (f.Category == "Optimal State")
+            {
+                item.ForeColor = Color.DarkGreen;
+            }
+
+            _lvDiagnosticFindings.Items.Add(item);
+        }
+
+        AppendLog($"[DIAGNOSTIC] Analyzed desktop interference: {findings.Count} findings.");
+    }
+
+    private void ShowProcessDatabaseDialog()
+    {
+        using var dlg = new Form
+        {
+            Text = "Process & Service Safety Database",
+            Width = 750,
+            Height = 480,
+            StartPosition = FormStartPosition.CenterParent,
+            BackColor = RetroTheme.BackgroundColor,
+            Font = RetroTheme.DefaultFont
+        };
+
+        var lv = new ListView
+        {
+            Dock = DockStyle.Fill,
+            View = View.Details,
+            FullRowSelect = true,
+            GridLines = true,
+            Font = RetroTheme.DefaultFont,
+            BorderStyle = BorderStyle.Fixed3D
+        };
+        lv.Columns.Add("Process", 110);
+        lv.Columns.Add("Classification", 110);
+        lv.Columns.Add("Category", 110);
+        lv.Columns.Add("Vendor", 90);
+        lv.Columns.Add("Technical Impact & Safety Details", 280);
+
+        foreach (var entry in _backgroundDatabase.GetAllEntries())
+        {
+            var item = new ListViewItem(entry.ProcessName);
+            item.SubItems.Add(entry.Classification.ToString());
+            item.SubItems.Add(entry.Category);
+            item.SubItems.Add(entry.Vendor);
+            item.SubItems.Add($"{entry.ImpactDescription} [If Paused: {entry.WhatHappensIfPaused}]");
+
+            switch (entry.Classification)
+            {
+                case SafetyClassification.DoNotTouch:
+                    item.ForeColor = Color.DarkRed;
+                    break;
+                case SafetyClassification.Safe:
+                    item.ForeColor = Color.DarkGreen;
+                    break;
+                case SafetyClassification.LowRisk:
+                    item.ForeColor = Color.Navy;
+                    break;
+            }
+
+            lv.Items.Add(item);
+        }
+
+        dlg.Controls.Add(lv);
+        dlg.ShowDialog(this);
+    }
+
+    private void ExportBenchmark()
+    {
+        if (_lastBenchmarkComparison == null)
+        {
+            MessageBox.Show("No benchmark session has been run yet. Run a benchmark first.", "Export", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        using var sfd = new SaveFileDialog
+        {
+            Filter = "JSON Files (*.json)|*.json",
+            FileName = $"benchmark_report_{DateTime.Now:yyyyMMdd_HHmmss}.json"
+        };
+
+        if (sfd.ShowDialog() == DialogResult.OK)
+        {
+            if (_exportManager.ExportBenchmarkSession(_lastBenchmarkComparison, sfd.FileName))
+            {
+                MessageBox.Show($"Benchmark exported successfully to:\n{sfd.FileName}", "Exported", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+    }
+
+    private void ExportProfiles()
+    {
+        using var sfd = new SaveFileDialog
+        {
+            Filter = "JSON Files (*.json)|*.json",
+            FileName = "smart_profiles.json"
+        };
+
+        if (sfd.ShowDialog() == DialogResult.OK)
+        {
+            if (_exportManager.ExportProfiles(_smartProfileManager.Profiles, sfd.FileName))
+            {
+                MessageBox.Show($"Profiles exported successfully to:\n{sfd.FileName}", "Exported", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
     }
     #endregion
 
@@ -729,6 +1135,7 @@ public class MainForm : Form
 
             // 4. Comparison
             var comp = _benchmarkEngine.Compare(before, after);
+            _lastBenchmarkComparison = comp;
 
             // Populate ListView
             AddMetricRow("Context Switches / sec", $"{before.ContextSwitchesPerSecond:N0}", $"{after.ContextSwitchesPerSecond:N0}", $"{comp.DeltaContextSwitchesPercent:+0.0;-0.0}%", comp.DeltaContextSwitchesPercent <= -2.0 ? "IMPROVED" : "NOISE");
