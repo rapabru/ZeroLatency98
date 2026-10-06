@@ -1,0 +1,48 @@
+# Visual Studio / MSVC build artifacts
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+x64/
+x86/
+ARM/
+ARM64/
+Debug/
+Release/
+bin/
+obj/
+*.obj
+*.pdb
+*.ilk
+*.idb
+*.exp
+*.lib
+*.tlog
+*.log
+*.lastbuildstate
+*.recipe
+
+# CMake build directories
+build/
+out/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+
+# Compiler outputs
+*.exe
+*.dll
+
+# IDE and Editor files
+.vscode/
+.idea/
+
+# Local session state / Runtime snapshots (do not commit dynamic test snapshots)
+*.snapshot.json
+snapshot_test_*.json
+
+# OS specific files
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
