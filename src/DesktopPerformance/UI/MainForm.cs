@@ -21,6 +21,7 @@ public class MainForm : Form
     private readonly MultiMonitorOptimizer _multiMonitorOptimizer;
     private readonly AdvancedBenchmarkEngine _advancedBenchmarkEngine;
     private readonly RetroShellEngine _retroShellEngine;
+    private readonly ClassicThemeManager _classicThemeManager;
     private readonly ProfileLearner _profileLearner;
 
     private BenchmarkComparison? _lastBenchmarkComparison;
@@ -120,11 +121,19 @@ public class MainForm : Form
     private RetroButton _btnAnalyzeMonitors = null!;
     private RetroButton _btnBlankSecondary = null!;
 
-    // Tab 7: Retro Desktop Shell & Themes
+    // Tab 7: Retro Desktop Shell & Themes (Phase 5)
     private TabPage _tabRetroShell = null!;
+    private GroupBox _grpThemeStatus = null!;
+    private Label _lblThemeStatus = null!;
+    private Label _lblThemeNotice = null!;
     private GroupBox _grpRetroThemes = null!;
     private ListView _lvThemes = null!;
     private RetroButton _btnApplyTheme = null!;
+    private RetroButton _btnRestoreTheme = null!;
+    private GroupBox _grpCompanion = null!;
+    private ListView _lvCompanionTools = null!;
+    private RetroButton _btnLaunchCompanion = null!;
+    private RetroButton _btnGetCompanion = null!;
     private GroupBox _grpRetroGuide = null!;
     private TextBox _txtShellGuide = null!;
 
@@ -151,6 +160,7 @@ public class MainForm : Form
         _multiMonitorOptimizer = new MultiMonitorOptimizer(_hardwareInspector);
         _advancedBenchmarkEngine = new AdvancedBenchmarkEngine(_benchmarkEngine);
         _retroShellEngine = new RetroShellEngine();
+        _classicThemeManager = new ClassicThemeManager(_visualEffects);
         _profileLearner = new ProfileLearner();
 
         InitializeComponent();
@@ -1068,20 +1078,51 @@ public class MainForm : Form
     }
     #endregion
 
-    #region Tab 7: Retro Shell & Themes
+    #region Tab 7: Retro Shell & Classic Theme (Phase 5)
     private void BuildRetroShellTab()
     {
-        _tabRetroShell = new TabPage("Retro Shell & Themes")
+        _tabRetroShell = new TabPage("Classic Theme & Retro Shell (Phase 5)")
         {
             BackColor = RetroTheme.BackgroundColor,
             Padding = new Padding(8)
         };
 
+        // Section 1: System Theme Status & Notice
+        _grpThemeStatus = new GroupBox
+        {
+            Text = "System Theme Status (Phase 5)",
+            Dock = DockStyle.Top,
+            Height = 68,
+            Font = RetroTheme.BoldFont
+        };
+
+        _lblThemeStatus = new Label
+        {
+            Text = "System Theme: ACTIVE Windows 11 Modern (DWM Shaders On)",
+            Location = new Point(8, 20),
+            Size = new Size(800, 18),
+            Font = RetroTheme.BoldFont,
+            ForeColor = Color.Navy
+        };
+
+        _lblThemeNotice = new Label
+        {
+            Text = "Applies native .theme file, SetSysColors palette, solid teal desktop, and shuts down DWM blur shaders for maximum system responsiveness.",
+            Location = new Point(8, 40),
+            Size = new Size(800, 20),
+            Font = RetroTheme.DefaultFont,
+            ForeColor = Color.FromArgb(64, 64, 64)
+        };
+
+        _grpThemeStatus.Controls.Add(_lblThemeStatus);
+        _grpThemeStatus.Controls.Add(_lblThemeNotice);
+
+        // Section 2: Classic Themes Presets
         _grpRetroThemes = new GroupBox
         {
-            Text = "Classic Windows Visual Theme Presets",
+            Text = "System-Wide Classic Windows 95/98 Themes (Low Load)",
             Dock = DockStyle.Top,
-            Height = 200,
+            Height = 210,
             Font = RetroTheme.BoldFont
         };
 
@@ -1094,16 +1135,17 @@ public class MainForm : Form
             Font = RetroTheme.DefaultFont,
             BorderStyle = BorderStyle.Fixed3D
         };
-        _lvThemes.Columns.Add("Theme Name", 180);
-        _lvThemes.Columns.Add("Description", 420);
-        _lvThemes.Columns.Add("Preset", 120);
+        _lvThemes.Columns.Add("Theme Name", 220);
+        _lvThemes.Columns.Add("Description", 450);
+        _lvThemes.Columns.Add("Variant", 130);
         ListViewColumnSorter.Attach(_lvThemes);
 
-        foreach (var th in _retroShellEngine.AvailableThemes)
+        foreach (var kvp in ClassicThemeManager.Definitions)
         {
-            var item = new ListViewItem(th.DisplayName);
-            item.SubItems.Add(th.Description);
-            item.SubItems.Add(th.Preset.ToString());
+            var def = kvp.Value;
+            var item = new ListViewItem(def.DisplayName);
+            item.SubItems.Add(def.Description);
+            item.SubItems.Add(def.Variant.ToString());
             _lvThemes.Items.Add(item);
         }
 
@@ -1115,27 +1157,128 @@ public class MainForm : Form
 
         _btnApplyTheme = new RetroButton
         {
-            Text = "Apply Selected Visual Palette",
+            Text = "[ Apply Classic Theme to System ]",
             Location = new Point(4, 4),
-            Size = new Size(220, 28)
+            Size = new Size(250, 28),
+            Font = RetroTheme.BoldFont
         };
         _btnApplyTheme.Click += (s, e) =>
         {
             if (_lvThemes.SelectedItems.Count > 0)
             {
-                var presetStr = _lvThemes.SelectedItems[0].SubItems[2].Text;
-                if (Enum.TryParse<RetroThemePreset>(presetStr, out var preset))
+                var variantStr = _lvThemes.SelectedItems[0].SubItems[2].Text;
+                if (Enum.TryParse<ClassicThemeVariant>(variantStr, out var variant))
                 {
-                    _retroShellEngine.ApplySysColorsTheme(preset);
-                    AppendLog($"[RETRO-THEME] Applied classic visual theme palette: {preset}");
+                    bool ok = _classicThemeManager.ApplyClassicTheme(variant, launchThemeFile: true);
+                    if (ok)
+                    {
+                        AppendLog($"[CLASSIC-THEME] Applied system-wide classic theme: {variant}. DWM transparency and animations disabled.");
+                        UpdateThemeStatusLabel();
+                    }
                 }
             }
         };
+
+        _btnRestoreTheme = new RetroButton
+        {
+            Text = "[ Restore Windows 11 Default Theme ]",
+            Location = new Point(260, 4),
+            Size = new Size(260, 28),
+            Font = RetroTheme.BoldFont
+        };
+        _btnRestoreTheme.Click += (s, e) =>
+        {
+            bool ok = _classicThemeManager.RestoreModernTheme();
+            if (ok)
+            {
+                AppendLog("[CLASSIC-THEME] Restored default modern Windows 11 theme and visual effects.");
+                UpdateThemeStatusLabel();
+            }
+        };
+
         pnlThemeActions.Controls.Add(_btnApplyTheme);
+        pnlThemeActions.Controls.Add(_btnRestoreTheme);
 
         _grpRetroThemes.Controls.Add(_lvThemes);
         _grpRetroThemes.Controls.Add(pnlThemeActions);
 
+        // Section 3: Companion Tools
+        _grpCompanion = new GroupBox
+        {
+            Text = "Retro Shell Companion Ecosystem (Optional Taskbar & Start Menu)",
+            Dock = DockStyle.Top,
+            Height = 125,
+            Font = RetroTheme.BoldFont
+        };
+
+        _lvCompanionTools = new ListView
+        {
+            Dock = DockStyle.Fill,
+            View = View.Details,
+            FullRowSelect = true,
+            GridLines = true,
+            Font = RetroTheme.DefaultFont,
+            BorderStyle = BorderStyle.Fixed3D
+        };
+        _lvCompanionTools.Columns.Add("Application", 130);
+        _lvCompanionTools.Columns.Add("Status", 130);
+        _lvCompanionTools.Columns.Add("Description", 520);
+        ListViewColumnSorter.Attach(_lvCompanionTools);
+
+        var pnlCompanionActions = new Panel
+        {
+            Dock = DockStyle.Bottom,
+            Height = 36
+        };
+
+        _btnLaunchCompanion = new RetroButton
+        {
+            Text = "Launch Selected Tool",
+            Location = new Point(4, 4),
+            Size = new Size(180, 28)
+        };
+        _btnLaunchCompanion.Click += (s, e) =>
+        {
+            if (_lvCompanionTools.SelectedItems.Count > 0 && _lvCompanionTools.SelectedItems[0].Tag is CompanionToolInfo tool)
+            {
+                if (tool.IsInstalled)
+                {
+                    _classicThemeManager.LaunchCompanionTool(tool.ExecutablePath);
+                    AppendLog($"[COMPANION] Launched {tool.Name}");
+                    RefreshCompanionTools();
+                }
+                else
+                {
+                    MessageBox.Show($"{tool.Name} is not detected on this system. Click 'Get Tool (GitHub)' to download it.", tool.Name, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+        };
+
+        _btnGetCompanion = new RetroButton
+        {
+            Text = "Get Tool (GitHub)",
+            Location = new Point(190, 4),
+            Size = new Size(160, 28)
+        };
+        _btnGetCompanion.Click += (s, e) =>
+        {
+            if (_lvCompanionTools.SelectedItems.Count > 0 && _lvCompanionTools.SelectedItems[0].Tag is CompanionToolInfo tool)
+            {
+                try
+                {
+                    Process.Start(new ProcessStartInfo { FileName = tool.DownloadUrl, UseShellExecute = true });
+                }
+                catch { }
+            }
+        };
+
+        pnlCompanionActions.Controls.Add(_btnLaunchCompanion);
+        pnlCompanionActions.Controls.Add(_btnGetCompanion);
+
+        _grpCompanion.Controls.Add(_lvCompanionTools);
+        _grpCompanion.Controls.Add(pnlCompanionActions);
+
+        // Section 4: Retro Guide
         _grpRetroGuide = new GroupBox
         {
             Text = "Safe Retro Shell Ecosystem Guide",
@@ -1150,21 +1293,59 @@ public class MainForm : Form
             ReadOnly = true,
             Font = RetroTheme.DefaultFont,
             BackColor = Color.White,
-            BorderStyle = BorderStyle.Fixed3D,
-            Text = "RECOMENDACIONES PARA EL SHELL RETRO COMPLETO (WINDOWS 11):\n\n" +
-                   "1. Open-Shell (Recomendado - SAFE):\n" +
-                   "   Reemplaza el menú inicio por un menú Win32 nativo estilo Windows 98/2000. Cero uso de GPU, sin inyecciones destructivas.\n\n" +
-                   "2. Windhawk (Recomendado para Mods de Ventanas - LOW RISK):\n" +
-                   "   Aplica mods de bordes cuadrados clásicos en RAM sin alterar archivos en disco de Windows.\n\n" +
-                   "3. ExplorerPatcher (ADVERTENCIA - HIGH RISK):\n" +
-                   "   No recomendado. Inyecta dxgi.dll en explorer.exe y suele provocar bloqueos de arranque con cada actualización acumulativa mensual de Windows 11."
+            BorderStyle = BorderStyle.Fixed3D
         };
         _grpRetroGuide.Controls.Add(_txtShellGuide);
 
+        // Add to Tab in docking order
         _tabRetroShell.Controls.Add(_grpRetroGuide);
+        _tabRetroShell.Controls.Add(_grpCompanion);
         _tabRetroShell.Controls.Add(_grpRetroThemes);
+        _tabRetroShell.Controls.Add(_grpThemeStatus);
 
         _tabControl.TabPages.Add(_tabRetroShell);
+
+        RefreshCompanionTools();
+        UpdateThemeStatusLabel();
+    }
+
+    private void RefreshCompanionTools()
+    {
+        _lvCompanionTools.BeginUpdate();
+        _lvCompanionTools.Items.Clear();
+
+        var rb = _classicThemeManager.GetRetroBarInfo();
+        var itemRb = new ListViewItem(rb.Name);
+        itemRb.SubItems.Add(rb.IsRunning ? "RUNNING" : (rb.IsInstalled ? "INSTALLED" : "NOT DETECTED"));
+        itemRb.SubItems.Add(rb.Description);
+        itemRb.Tag = rb;
+        itemRb.ForeColor = rb.IsRunning ? Color.DarkGreen : (rb.IsInstalled ? Color.DarkBlue : Color.Gray);
+        _lvCompanionTools.Items.Add(itemRb);
+
+        var os = _classicThemeManager.GetOpenShellInfo();
+        var itemOs = new ListViewItem(os.Name);
+        itemOs.SubItems.Add(os.IsRunning ? "RUNNING" : (os.IsInstalled ? "INSTALLED" : "NOT DETECTED"));
+        itemOs.SubItems.Add(os.Description);
+        itemOs.Tag = os;
+        itemOs.ForeColor = os.IsRunning ? Color.DarkGreen : (os.IsInstalled ? Color.DarkBlue : Color.Gray);
+        _lvCompanionTools.Items.Add(itemOs);
+
+        _lvCompanionTools.EndUpdate();
+    }
+
+    private void UpdateThemeStatusLabel()
+    {
+        var loc = LocalizationManager.Instance;
+        if (_classicThemeManager.IsClassicThemeActive)
+        {
+            _lblThemeStatus.Text = $"{loc.T("RetroShell_StatusTitle")} {loc.T("RetroShell_StatusClassic")} ({_classicThemeManager.ActiveVariant})";
+            _lblThemeStatus.ForeColor = Color.DarkGreen;
+        }
+        else
+        {
+            _lblThemeStatus.Text = $"{loc.T("RetroShell_StatusTitle")} {loc.T("RetroShell_StatusModern")}";
+            _lblThemeStatus.ForeColor = Color.Navy;
+        }
     }
     #endregion
 
@@ -1503,8 +1684,15 @@ public class MainForm : Form
         _btnAnalyzeMonitors.Text = loc.T("MultiMonitor_AnalyzeBtn");
         _btnBlankSecondary.Text = loc.T("MultiMonitor_BlankBtn");
 
+        _grpThemeStatus.Text = loc.T("RetroShell_StatusTitle");
+        UpdateThemeStatusLabel();
+        _lblThemeNotice.Text = loc.T("RetroShell_Notice");
         _grpRetroThemes.Text = loc.T("RetroShell_ThemesGrp");
         _btnApplyTheme.Text = loc.T("RetroShell_ApplyBtn");
+        _btnRestoreTheme.Text = loc.T("RetroShell_RestoreBtn");
+        _grpCompanion.Text = loc.T("RetroShell_CompanionGrp");
+        _btnLaunchCompanion.Text = loc.T("RetroShell_LaunchRetroBar");
+        _btnGetCompanion.Text = loc.T("RetroShell_GetRetroBar");
         _grpRetroGuide.Text = loc.T("RetroShell_GuideGrp");
         _txtShellGuide.Text = loc.T("RetroShell_GuideText");
 
@@ -1543,6 +1731,10 @@ public class MainForm : Form
         SetColumnTitle(_lvThemes, 0, "Col_ThemeName");
         SetColumnTitle(_lvThemes, 1, "Col_Description");
         SetColumnTitle(_lvThemes, 2, "Col_Preset");
+
+        SetColumnTitle(_lvCompanionTools, 0, "Col_Application");
+        SetColumnTitle(_lvCompanionTools, 1, "Col_State");
+        SetColumnTitle(_lvCompanionTools, 2, "Col_Description");
 
         UpdateStatusLabels();
     }

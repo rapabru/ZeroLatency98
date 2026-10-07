@@ -182,9 +182,19 @@ public class LocalizationManager
             ["MultiMonitor_AnalyzeBtn"] = "Analyze Multi-Display Desync",
             ["MultiMonitor_BlankBtn"] = "Apply Static Background to Secondary Monitors",
 
-            // Tab 7: Retro Shell
-            ["RetroShell_ThemesGrp"] = "Classic Windows Visual Theme Presets",
-            ["RetroShell_ApplyBtn"] = "Apply Selected Visual Palette",
+            // Tab 7: Retro Shell & Classic Theme (Phase 5)
+            ["RetroShell_ThemesGrp"] = "System-Wide Classic Windows 95/98 Themes (Low Load)",
+            ["RetroShell_ApplyBtn"] = "[ Apply Classic Theme to System ]",
+            ["RetroShell_RestoreBtn"] = "[ Restore Windows 11 Default Theme ]",
+            ["RetroShell_Notice"] = "Applies native .theme file, SetSysColors palette, solid teal desktop, and shuts down DWM blur shaders for maximum system responsiveness.",
+            ["RetroShell_StatusTitle"] = "System Theme Status:",
+            ["RetroShell_StatusClassic"] = "ACTIVE: Classic Theme (Zero-Overhead)",
+            ["RetroShell_StatusModern"] = "ACTIVE: Windows 11 Modern (DWM Shaders On)",
+            ["RetroShell_CompanionGrp"] = "Retro Shell Companion Ecosystem (Optional Taskbar & Start Menu)",
+            ["RetroShell_LaunchRetroBar"] = "Launch RetroBar",
+            ["RetroShell_GetRetroBar"] = "Get RetroBar (GitHub)",
+            ["RetroShell_LaunchOpenShell"] = "Launch Open-Shell",
+            ["RetroShell_GetOpenShell"] = "Get Open-Shell (GitHub)",
             ["RetroShell_GuideGrp"] = "Safe Retro Shell Ecosystem Guide",
             ["RetroShell_GuideText"] = "RECOMMENDATIONS FOR FULL RETRO SHELL (WINDOWS 11):\n\n" +
                                        "1. Open-Shell (Recommended - SAFE):\n" +
@@ -318,9 +328,19 @@ public class LocalizationManager
             ["MultiMonitor_AnalyzeBtn"] = "Analizar Desincronización Multi-Pantalla",
             ["MultiMonitor_BlankBtn"] = "Fondo Estático en Pantallas Secundarias",
 
-            // Tab 7: Retro Shell
-            ["RetroShell_ThemesGrp"] = "Paletas Visuales Clásicas de Windows",
-            ["RetroShell_ApplyBtn"] = "Aplicar Paleta Visual Seleccionada",
+            // Tab 7: Retro Shell & Classic Theme (Fase 5)
+            ["RetroShell_ThemesGrp"] = "Temas Clásicos de Windows 95/98 para el Sistema (Baja Carga)",
+            ["RetroShell_ApplyBtn"] = "[ Aplicar Tema Clásico al Sistema ]",
+            ["RetroShell_RestoreBtn"] = "[ Restaurar Tema Original de Windows 11 ]",
+            ["RetroShell_Notice"] = "Aplica archivo .theme nativo, paleta SetSysColors, fondo verde azulado sólido y apaga shaders de desenfoque de DWM para máxima respuesta del sistema.",
+            ["RetroShell_StatusTitle"] = "Estado del Tema del Sistema:",
+            ["RetroShell_StatusClassic"] = "ACTIVO: Tema Clásico (Cero Sobrecarga)",
+            ["RetroShell_StatusModern"] = "ACTIVO: Windows 11 Moderno (Shaders DWM Activos)",
+            ["RetroShell_CompanionGrp"] = "Ecosistema de Shell Retro Complementario (Barra de Tareas y Menú Inicio)",
+            ["RetroShell_LaunchRetroBar"] = "Ejecutar RetroBar",
+            ["RetroShell_GetRetroBar"] = "Obtener RetroBar (GitHub)",
+            ["RetroShell_LaunchOpenShell"] = "Ejecutar Open-Shell",
+            ["RetroShell_GetOpenShell"] = "Obtener Open-Shell (GitHub)",
             ["RetroShell_GuideGrp"] = "Guía de Ecosistema Shell Retro Seguro",
             ["RetroShell_GuideText"] = "RECOMENDACIONES PARA EL SHELL RETRO COMPLETO (WINDOWS 11):\n\n" +
                                        "1. Open-Shell (Recomendado - SEGURO):\n" +

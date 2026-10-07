@@ -40,9 +40,27 @@ La interfaz permite pausar, reanudar y asignar prioridad de fondo a procesos pes
 | **4. Verificación y Benchmark** | ![Benchmark](docs/screenshots/tab_es_3_verification_benchmark.png) | Medición Trilateral automatizada (Antes vs Después vs Delta) con contadores de rendimiento PDH. |
 | **5. Diagnósticos y Perfiles Inteligentes** | ![Diagnósticos](docs/screenshots/tab_es_4_diagnostics_smart_profiles.png) | Detección de procesos intrusivos ("¿Por qué está ocupado el sistema?") y auto-activación por juegos. |
 | **6. Estudio Multi-Monitor & VRR** | ![Multi-Monitor](docs/screenshots/tab_es_5_multi_monitor_vrr.png) | Prevención de desincronización de G-Sync/FreeSync y microstuttering por aceleración en pantallas secundarias. |
-| **7. Shell Retro y Temas** | ![Temas Retro](docs/screenshots/tab_es_6_retro_shell_themes.png) | Temas retro de baja carga gráfica (Classic 98, Charcoal 2000, Teal Workbench, Amber Terminal, High Contrast). |
+| **7. Tema Clásico y Shell Retro (Fase 5)** | ![Temas Retro](docs/screenshots/tab_es_6_retro_shell_themes.png) | Activador de Tema Clásico Windows 95/98 para todo el sistema. Aplica archivos .theme nativos, paleta SetSysColors, fondo teal sólido y apaga shaders DWM para mínima sobrecarga gráfica. |
 
 ---
+
+## 🪟 Fase 5: Motor de Tema Clásico Windows 95/98 del Sistema (Cero Sobrecarga)
+
+Windows 10 y 11 imponen una fuerte sobrecarga gráfica a través del compositor DWM: efectos Mica y Acrílico en tiempo real, sombras proyectadas y animaciones que consumen ciclos de GPU y aumentan la latencia en gaming competitivo y producción de audio en tiempo real.
+
+### Cómo Aplica la Fase 5 el Tema Clásico de Forma Segura:
+A diferencia de herramientas obsoletas y peligrosas que parchaban o inyectaban `uxtheme.dll` o `dwm.exe` (provocando pantallazos negros o bloqueos tras las actualizaciones de Windows), esta suite utiliza **métodos 100% nativos, estables y reversibles**:
+
+1. **Generación Dinámica de Archivos `.theme`:** Escribe archivos de tema compatibles en `%LOCALAPPDATA%\DesktopPerformance98\Themes\`:
+   - **Windows 95 Clásico:** Fondo verde azulado (`#008080`), controles 3D gris piedra (`#C0C0C0`) y barras de título azul marino sólido (`#000080`).
+   - **Windows 98 Plus! (SE):** Gradiente horizontal clásico de dos tonos en barra de título (`#000080` a `#1084D0`) y fondo teal.
+   - **Windows 2000 Professional:** Paleta pizarra corporativa (`#D4D0C8`) con gradiente azul real (`#0A246A` a `#A6CAF0`).
+   - **Win98 High-Contrast Flat (OLED / Máximo FPS):** Fondo negro puro (`#000000`) para consumo cero en pantallas OLED y mínima latencia de composición.
+2. **Inyección en Memoria con `SetSysColors`:** Aplica más de 25 índices de color de la interfaz de forma inmediata para que las ventanas abiertas y cuadros de diálogo adopten el aspecto clásico sin reiniciar la sesión.
+3. **Escritorio Plano Teal (`#008080`):** Elimina texturas pesadas de la memoria de video y establece el fondo sólido icónico vía `SystemParametersInfo(SPI_SETDESKWALLPAPER)`.
+4. **Supresión de Shaders y Animaciones DWM:** Apaga transparencia, animaciones de minimizado/maximizado (`SPI_SETANIMATION`) y sombras proyectadas.
+5. **Rollback Atómico en 1 Clic:** Realiza una copia de seguridad automática del tema actual de Windows 11 (`backup_theme.theme`) y ofrece el botón **[ Restaurar Tema Original de Windows 11 ]**.
+6. **Ecosistema de Shell Retro Complementario:** Escanea y permite ejecutar con un clic herramientas no invasivas de código abierto (**RetroBar** para la barra de tareas y **Open-Shell** para el menú inicio).
 
 ## 🌐 Soporte Multilingüe Integrado (Español / Inglés)
 

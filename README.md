@@ -41,9 +41,27 @@ Monitor and manage secondary applications (Discord, Chrome, Steam, Spotify, OneD
 | **4. Verification & Benchmark** | ![Benchmark Preview](docs/screenshots/tab_en_3_verification_benchmark.png) | Automated Trilateral Benchmark (Baseline vs Optimized vs Delta) using native Windows PDH telemetry counters. |
 | **5. Diagnostics & Smart Profiles** | ![Diagnostics Preview](docs/screenshots/tab_en_4_diagnostics_smart_profiles.png) | *"Why is system busy?"* deep analysis, signature database, and background game watcher for automatic profile engagement. |
 | **6. Multi-Monitor Studio & VRR** | ![VRR Preview](docs/screenshots/tab_en_5_multi_monitor_vrr.png) | Mitigates VRR/G-Sync de-synchronization and frame pacing jitter caused by hardware-accelerated apps on secondary displays. |
-| **7. Retro Shell & Themes** | ![Themes Preview](docs/screenshots/tab_en_6_retro_shell_themes.png) | Low-overhead retro themes (Classic 98, Charcoal 2000, Teal Workbench, Amber Terminal, High Contrast Silver) without modifying system binaries. |
+| **7. Classic Theme & Retro Shell (Phase 5)** | ![Themes Preview](docs/screenshots/tab_en_6_retro_shell_themes.png) | System-wide Windows 95/98 Classic Theme enabler. Applies native .theme files, SetSysColors palette, solid teal desktop, and eliminates DWM blur shaders for lowest GPU overhead. |
 
 ---
+
+## 🪟 Phase 5: System-Wide Windows 95/98 Classic Theme & Zero-Overhead Engine
+
+Modern Windows 10 and 11 force heavy GPU-driven DWM composition: real-time Mica and Acrylic blur shaders, drop shadows, and window animations that consume VRAM and can cause frame pacing stutter in competitive gaming or real-time audio production.
+
+### How Phase 5 Applies the Classic Theme Safely:
+Unlike obsolete and dangerous patchers that modify `uxtheme.dll` or inject code into `dwm.exe` (which break with Windows Updates and can cause boot loops), this tool strictly adheres to **100% native, supported, and reversible mechanisms**:
+
+1. **Dynamic `.theme` Generation:** Generates authentic `.theme` definitions saved to `%LOCALAPPDATA%\DesktopPerformance98\Themes\`:
+   - **Windows 95 Classic:** Teal desktop (`#008080`), stone-gray 3D controls (`#C0C0C0`), and solid navy blue title bars (`#000080`).
+   - **Windows 98 Plus! (SE):** Classic two-tone caption gradient (`#000080` to `#1084D0`) with teal desktop.
+   - **Windows 2000 Professional:** Corporate slate palette (`#D4D0C8`) with deep blue gradient (`#0A246A` to `#A6CAF0`).
+   - **Win98 High-Contrast Flat (OLED / Max FPS):** Pure black background (`#000000`) for zero-power draw on OLED monitors and lowest DWM composition latency.
+2. **Immediate In-Memory `SetSysColors`:** Reconfigures 25+ classic Win32 color indices in memory instantly via official User32 APIs, updating open dialogs and classic windows without requiring a system restart.
+3. **Solid Teal Desktop (`#008080`):** Removes heavy wallpaper textures from GPU memory and sets the classic solid color via `SystemParametersInfo(SPI_SETDESKWALLPAPER)`.
+4. **DWM Shaders & Animation Suppression:** Automatically turns off transparency, window animations (`SPI_SETANIMATION`), and drop shadows to minimize compositor workload.
+5. **Atomic 1-Click Rollback:** Automatically backs up your active Windows 11 theme (`backup_theme.theme`) before applying and provides an instant **[ Restore Windows 11 Default Theme ]** button.
+6. **Companion Retro Shell Integration:** Built-in scanner and one-click launcher for safe, non-invasive open-source companion tools (**RetroBar** for the taskbar and **Open-Shell** for the Start menu).
 
 ## 🌐 Dynamic In-App Multilingual Engine (English / Español)
 
