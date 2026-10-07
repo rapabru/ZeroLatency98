@@ -52,23 +52,15 @@ public class RetroButton : Button
             RetroTheme.Draw3DRaisedBorder(g, rect);
         }
 
-        // Draw Text
+        // Draw Text using TextRenderer with proper mnemonic handling
         var textRect = new Rectangle(
             rect.X + (_isPressed ? 1 : 0),
             rect.Y + (_isPressed ? 1 : 0),
             rect.Width,
             rect.Height);
 
-        var format = new StringFormat
-        {
-            Alignment = StringAlignment.Center,
-            LineAlignment = StringAlignment.Center
-        };
-
-        using (var brush = new SolidBrush(Enabled ? ForeColor : RetroTheme.DarkShadow))
-        {
-            g.DrawString(Text, Font, brush, textRect, format);
-        }
+        var flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine;
+        TextRenderer.DrawText(g, Text, Font, textRect, Enabled ? ForeColor : RetroTheme.DarkShadow, flags);
 
         // Focus rectangle
         if (Focused && Enabled)

@@ -27,7 +27,6 @@ public class MainForm : Form
 
     // UI Controls
     private MenuStrip _menuStrip = null!;
-    private Panel _bannerPanel = null!;
     private RetroPanel _summaryPanel = null!;
     private Label _lblSummary = null!;
     private TabControl _tabControl = null!;
@@ -227,23 +226,12 @@ public class MainForm : Form
 
         _menuStrip.Items.AddRange(new ToolStripItem[] { fileMenu, profilesMenu, diagMenu, helpMenu });
 
-        // 2. Banner Panel
-        _bannerPanel = new Panel
-        {
-            Dock = DockStyle.Top,
-            Height = 28
-        };
-        _bannerPanel.Paint += (s, e) =>
-        {
-            RetroTheme.DrawTitleBar(e.Graphics, _bannerPanel.ClientRectangle, "  Desktop Performance / Low-Interference System Controller");
-        };
-
-        // 3. Summary Panel (Sunken)
+        // 2. Summary Panel (Sunken)
         _summaryPanel = new RetroPanel
         {
             Dock = DockStyle.Top,
-            Height = 48,
-            Padding = new Padding(6),
+            Height = 44,
+            Padding = new Padding(8),
             IsSunken = true
         };
         _lblSummary = new Label
@@ -256,7 +244,7 @@ public class MainForm : Form
         };
         _summaryPanel.Controls.Add(_lblSummary);
 
-        // 4. TabControl
+        // 3. TabControl
         _tabControl = new TabControl
         {
             Dock = DockStyle.Fill,
@@ -272,7 +260,7 @@ public class MainForm : Form
         BuildMultiMonitorTab();
         BuildRetroShellTab();
 
-        // 5. StatusStrip
+        // 4. StatusStrip
         _statusStrip = new StatusStrip
         {
             BackColor = RetroTheme.BackgroundColor,
@@ -289,7 +277,6 @@ public class MainForm : Form
         // Add controls in order
         Controls.Add(_tabControl);
         Controls.Add(_summaryPanel);
-        Controls.Add(_bannerPanel);
         Controls.Add(_menuStrip);
         Controls.Add(_statusStrip);
 
@@ -309,7 +296,7 @@ public class MainForm : Form
 
         var pnlTop = new GroupBox
         {
-            Text = "Active Displays & Monitors",
+            Text = "Active Displays and Monitors",
             Dock = DockStyle.Top,
             Height = 180,
             Font = RetroTheme.BoldFont
@@ -333,7 +320,7 @@ public class MainForm : Form
 
         var pnlMid = new GroupBox
         {
-            Text = "Hardware & Memory State",
+            Text = "Hardware and Memory State",
             Dock = DockStyle.Top,
             Height = 110,
             Font = RetroTheme.BoldFont
