@@ -2,7 +2,7 @@
 
 > **Keep Windows 11 modern and fully functional, but make the desktop as static, simple, and non-intrusive as possible when maximum system responsiveness is demanded.**
 
-[![GitHub Release](https://img.shields.io/github/v/release/rapabru/theme-98)](https://github.com/rapabru/theme-98/releases/latest)
+[![GitHub Release](https://img.shields.io/github/v/release/rapabru/ZeroLatency98)](https://github.com/rapabru/ZeroLatency98/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/Tests-27%2F27%20Passing-brightgreen.svg)]()
 [![Platform: Windows 11](https://img.shields.io/badge/Platform-Windows%2011%20x64-blue.svg)]()
@@ -14,7 +14,7 @@ A precision latency-reduction and interference-mitigation tool for Windows 11, e
 
 ---
 
-### ⬇️ [Download the Latest Release (v1.5.0)](https://github.com/rapabru/theme-98/releases/latest)
+### ⬇️ [Download the Latest Release (v1.5.0)](https://github.com/rapabru/ZeroLatency98/releases/latest)
 
 - **Standalone x64 (`ZeroLatency98-v1.5.0-win-x64-standalone.zip`):** Single, self-contained executable. No runtime installations or external dependencies required. Download, extract, and run directly on Windows 11 x64.
 - **Lightweight Portable (`ZeroLatency98-v1.5.0-portable.zip`):** Ultra-small ~600 KB package (requires .NET 9 Desktop Runtime).
@@ -166,8 +166,8 @@ Requires [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) on Windo
 
 ```powershell
 # 1. Clone the repository
-git clone https://github.com/rapabru/theme-98.git
-cd "theme 98"
+git clone https://github.com/rapabru/ZeroLatency98.git
+cd ZeroLatency98
 
 # 2. Run the test suite (all 27 unit tests should pass)
 dotnet test

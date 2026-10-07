@@ -2,7 +2,7 @@
 
 > **Mantener Windows 11 moderno y funcional, pero hacer que el desktop sea lo más estático, simple y poco intrusivo posible cuando se necesita máxima capacidad de respuesta del sistema.**
 
-[![GitHub Release](https://img.shields.io/github/v/release/rapabru/theme-98)](https://github.com/rapabru/theme-98/releases/latest)
+[![GitHub Release](https://img.shields.io/github/v/release/rapabru/ZeroLatency98)](https://github.com/rapabru/ZeroLatency98/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/Tests-27%2F27%20Passing-brightgreen.svg)]()
 [![Platform: Windows 11](https://img.shields.io/badge/Platform-Windows%2011%20x64-blue.svg)]()
@@ -13,7 +13,7 @@ Una herramienta de precisión para Windows 11 diseñada bajo los principios de *
 
 ---
 
-### ⬇️ [Descargar la última versión (v1.5.0)](https://github.com/rapabru/theme-98/releases/latest)
+### ⬇️ [Descargar la última versión (v1.5.0)](https://github.com/rapabru/ZeroLatency98/releases/latest)
 
 - **Standalone x64 (`ZeroLatency98-v1.5.0-win-x64-standalone.zip`):** Un único archivo ejecutable autónomo. No requiere instalar runtimes ni dependencias. Descargar, descomprimir y ejecutar directamente en Windows 11 x64.
 - **Portátil Ligero (`ZeroLatency98-v1.5.0-portable.zip`):** Paquete ultraligero (requiere .NET 9 Desktop Runtime instalado).
@@ -121,8 +121,8 @@ Requiere [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0):
 
 ```powershell
 # Clonar el repositorio
-git clone https://github.com/rapabru/theme-98.git
-cd "theme 98"
+git clone https://github.com/rapabru/ZeroLatency98.git
+cd ZeroLatency98
 
 # Ejecutar las pruebas unitarias (27 pruebas superadas)
 dotnet test
