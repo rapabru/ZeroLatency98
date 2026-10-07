@@ -10,12 +10,12 @@ public class LocalizationTests
         var loc = new LocalizationManager();
 
         loc.CurrentLanguage = AppLanguage.English;
-        Assert.Equal("Desktop Performance - Low-Interference Mode [Win98]", loc.T("App_Title"));
+        Assert.Equal("ZeroLatency98 - Windows Latency & Classic Theme Suite", loc.T("App_Title"));
         Assert.Equal("&File", loc.T("Menu_File"));
         Assert.Equal("Background Manager", loc.T("Tab_Background"));
 
         loc.CurrentLanguage = AppLanguage.Spanish;
-        Assert.Equal("Desktop Performance - Modo Baja Interferencia [Win98]", loc.T("App_Title"));
+        Assert.Equal("ZeroLatency98 - Modo Baja Latencia y Tema Clásico", loc.T("App_Title"));
         Assert.Equal("&Archivo", loc.T("Menu_File"));
         Assert.Equal("Administrador de Fondo", loc.T("Tab_Background"));
     }

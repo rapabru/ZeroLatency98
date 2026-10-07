@@ -100,7 +100,7 @@ public class LocalizationManager
         [AppLanguage.English] = new Dictionary<string, string>
         {
             // App Title
-            ["App_Title"] = "Desktop Performance - Low-Interference Mode [Win98]",
+            ["App_Title"] = "ZeroLatency98 - Windows Latency & Classic Theme Suite",
 
             // Menus
             ["Menu_File"] = "&File",
@@ -124,7 +124,7 @@ public class LocalizationManager
             ["Menu_LangSpanish"] = "&Español",
 
             ["Menu_Help"] = "&Help",
-            ["Menu_About"] = "&About Win98 Desktop Performance Mode",
+            ["Menu_About"] = "&About ZeroLatency98",
 
             // Tabs
             ["Tab_Topology"] = "System Topology & Monitors",
@@ -246,7 +246,7 @@ public class LocalizationManager
         [AppLanguage.Spanish] = new Dictionary<string, string>
         {
             // App Title
-            ["App_Title"] = "Desktop Performance - Modo Baja Interferencia [Win98]",
+            ["App_Title"] = "ZeroLatency98 - Modo Baja Latencia y Tema Clásico",
 
             // Menus
             ["Menu_File"] = "&Archivo",
@@ -270,7 +270,7 @@ public class LocalizationManager
             ["Menu_LangSpanish"] = "&Español",
 
             ["Menu_Help"] = "A&yuda",
-            ["Menu_About"] = "&Acerca de Win98 Desktop Performance Mode",
+            ["Menu_About"] = "&Acerca de ZeroLatency98",
 
             // Tabs
             ["Tab_Topology"] = "Topología de Sistema y Monitores",

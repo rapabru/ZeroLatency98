@@ -1,10 +1,10 @@
-# Windows 11 Desktop Performance & Low-Interference Mode (Win98/2000 Aesthetic)
+# ZeroLatency98: Windows 11 Latency & Classic Theme Suite
 
 > **Keep Windows 11 modern and fully functional, but make the desktop as static, simple, and non-intrusive as possible when maximum system responsiveness is demanded.**
 
 [![GitHub Release](https://img.shields.io/github/v/release/rapabru/theme-98)](https://github.com/rapabru/theme-98/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-21%2F21%20Passing-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-27%2F27%20Passing-brightgreen.svg)]()
 [![Platform: Windows 11](https://img.shields.io/badge/Platform-Windows%2011%20x64-blue.svg)]()
 [![Language: English & Spanish](https://img.shields.io/badge/Language-English%20%7C%20Espa%C3%B1ol-informational.svg)]()
 
@@ -14,10 +14,10 @@ A precision latency-reduction and interference-mitigation tool for Windows 11, e
 
 ---
 
-### ⬇️ [Download the Latest Release (v1.3.0)](https://github.com/rapabru/theme-98/releases/latest)
+### ⬇️ [Download the Latest Release (v1.5.0)](https://github.com/rapabru/theme-98/releases/latest)
 
-- **Standalone x64 (`DesktopPerformance-v1.3.0-win-x64-standalone.zip`):** Single, self-contained executable. No runtime installations or external dependencies required. Download, extract, and run directly on Windows 11 x64.
-- **Lightweight Portable (`DesktopPerformance-v1.3.0-portable.zip`):** Ultra-small ~600 KB package (requires .NET 9 Desktop Runtime).
+- **Standalone x64 (`ZeroLatency98-v1.5.0-win-x64-standalone.zip`):** Single, self-contained executable. No runtime installations or external dependencies required. Download, extract, and run directly on Windows 11 x64.
+- **Lightweight Portable (`ZeroLatency98-v1.5.0-portable.zip`):** Ultra-small ~600 KB package (requires .NET 9 Desktop Runtime).
 
 ---
 
@@ -158,7 +158,7 @@ Rather than making unverified claims, the application includes a built-in benchm
 ### Running Prebuilt Binaries
 1. Grab the latest release package from the [Releases page](https://github.com/rapabru/theme-98/releases/latest).
 2. Extract the ZIP archive anywhere on your system.
-3. Launch `DesktopPerformance.exe`.
+3. Launch `ZeroLatency98.exe`.
 4. Select your preferred profile or configure the Background Manager.
 
 ### Building from Source
@@ -169,7 +169,7 @@ Requires [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) on Windo
 git clone https://github.com/rapabru/theme-98.git
 cd "theme 98"
 
-# 2. Run the test suite (all 21 unit tests should pass)
+# 2. Run the test suite (all 27 unit tests should pass)
 dotnet test
 
 # 3. Launch in development mode

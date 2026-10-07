@@ -1,10 +1,10 @@
-# Windows 11 Desktop Performance & Low-Interference Mode (Estética Win98/2000)
+# ZeroLatency98: Suite de Rendimiento y Tema Clásico para Windows 11
 
 > **Mantener Windows 11 moderno y funcional, pero hacer que el desktop sea lo más estático, simple y poco intrusivo posible cuando se necesita máxima capacidad de respuesta del sistema.**
 
 [![GitHub Release](https://img.shields.io/github/v/release/rapabru/theme-98)](https://github.com/rapabru/theme-98/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-21%2F21%20Passing-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-27%2F27%20Passing-brightgreen.svg)]()
 [![Platform: Windows 11](https://img.shields.io/badge/Platform-Windows%2011%20x64-blue.svg)]()
 
 🌐 **[Read this documentation in English (README.md)](README.md)**
@@ -13,10 +13,10 @@ Una herramienta de precisión para Windows 11 diseñada bajo los principios de *
 
 ---
 
-### ⬇️ [Descargar la última versión (Releases)](https://github.com/rapabru/theme-98/releases/latest)
+### ⬇️ [Descargar la última versión (v1.5.0)](https://github.com/rapabru/theme-98/releases/latest)
 
-- **Standalone x64 (`DesktopPerformance-v1.3.0-win-x64-standalone.zip`):** Un único archivo ejecutable autónomo. No requiere instalar runtimes ni dependencias. Descargar, descomprimir y ejecutar directamente en Windows 11 x64.
-- **Portátil Ligero (`DesktopPerformance-v1.3.0-portable.zip`):** Paquete ultraligero (requiere .NET 9 Desktop Runtime instalado).
+- **Standalone x64 (`ZeroLatency98-v1.5.0-win-x64-standalone.zip`):** Un único archivo ejecutable autónomo. No requiere instalar runtimes ni dependencias. Descargar, descomprimir y ejecutar directamente en Windows 11 x64.
+- **Portátil Ligero (`ZeroLatency98-v1.5.0-portable.zip`):** Paquete ultraligero (requiere .NET 9 Desktop Runtime instalado).
 
 ---
 
@@ -114,7 +114,7 @@ La aplicación incluye un motor de telemetría de rendimiento basado en la API n
 ### Ejecución Directa
 1. Descarga el archivo zip desde [Releases](https://github.com/rapabru/theme-98/releases/latest).
 2. Extrae el contenido en cualquier carpeta.
-3. Ejecuta `DesktopPerformance.exe`.
+3. Ejecuta `ZeroLatency98.exe`.
 
 ### Compilación desde el Código Fuente
 Requiere [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0):
@@ -124,7 +124,7 @@ Requiere [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0):
 git clone https://github.com/rapabru/theme-98.git
 cd "theme 98"
 
-# Ejecutar las pruebas unitarias
+# Ejecutar las pruebas unitarias (27 pruebas superadas)
 dotnet test
 
 # Ejecutar en modo desarrollo

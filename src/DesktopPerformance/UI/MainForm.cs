@@ -235,7 +235,7 @@ public class MainForm : Form
     {
         SuspendLayout();
 
-        Text = "Desktop Performance - Low-Interference Mode [Win98]";
+        Text = "ZeroLatency98 - Windows Latency & Classic Theme Suite";
         Width = 880;
         Height = 680;
         MinimumSize = new Size(820, 620);
@@ -277,14 +277,14 @@ public class MainForm : Form
         _menuLanguage.DropDownItems.AddRange(new ToolStripItem[] { _menuLangEnglish, _menuLangSpanish });
 
         _menuHelp = new ToolStripMenuItem("&Help");
-        _menuAbout = new ToolStripMenuItem("&About Win98 Desktop Performance Mode", null, (s, e) =>
+        _menuAbout = new ToolStripMenuItem("&About ZeroLatency98", null, (s, e) =>
         {
             MessageBox.Show(
-                "Desktop Performance & Low-Interference Mode\n\n" +
-                "Authentic Windows 98/2000 Retro Aesthetics for Windows 11.\n" +
-                "Zero bloat, zero placebo, transactional snapshots with 1-click restore.\n\n" +
-                "Version 1.2 (Full Phase 3 Implementation)",
-                "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                "ZeroLatency98 - Windows Latency & Classic Theme Suite\n\n" +
+                "Authentic Windows 98/2000 Retro Aesthetics for Windows 10/11.\n" +
+                "Zero bloat, zero placebo, atomic snapshots, VRR protection, and System-Wide Classic Theme Mode.\n\n" +
+                "Version 1.5.0",
+                "About ZeroLatency98", MessageBoxButtons.OK, MessageBoxIcon.Information);
         });
         _menuHelp.DropDownItems.Add(_menuAbout);
 
