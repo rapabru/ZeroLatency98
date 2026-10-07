@@ -244,6 +244,27 @@ public class MainForm : Form
         Font = RetroTheme.DefaultFont;
         ForeColor = RetroTheme.Black;
 
+        try
+        {
+            using var iconStream = typeof(MainForm).Assembly.GetManifestResourceStream("DesktopPerformance.ZeroLatency98.ico");
+            if (iconStream != null)
+            {
+                Icon = new Icon(iconStream);
+            }
+            else
+            {
+                var exePath = Environment.ProcessPath ?? Application.ExecutablePath;
+                if (!string.IsNullOrEmpty(exePath) && File.Exists(exePath))
+                {
+                    Icon = Icon.ExtractAssociatedIcon(exePath);
+                }
+            }
+        }
+        catch
+        {
+            // Fallback safely if icon extraction fails
+        }
+
         // 1. MenuStrip
         _menuStrip = new MenuStrip
         {

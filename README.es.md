@@ -1,4 +1,4 @@
-# ZeroLatency98: Suite de Rendimiento y Tema Clásico para Windows 11
+# <img src="assets/ZeroLatency98_256.png" width="40" height="40" align="center" alt="ZeroLatency98" /> ZeroLatency98: Suite de Rendimiento y Tema Clásico para Windows 11
 
 > **Mantener Windows 11 moderno y funcional, pero hacer que el desktop sea lo más estático, simple y poco intrusivo posible cuando se necesita máxima capacidad de respuesta del sistema.**
 

@@ -1,4 +1,4 @@
-# ZeroLatency98: Windows 11 Latency & Classic Theme Suite
+# <img src="assets/ZeroLatency98_256.png" width="40" height="40" align="center" alt="ZeroLatency98" /> ZeroLatency98: Windows 11 Latency & Classic Theme Suite
 
 > **Keep Windows 11 modern and fully functional, but make the desktop as static, simple, and non-intrusive as possible when maximum system responsiveness is demanded.**
 
