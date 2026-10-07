@@ -316,6 +316,7 @@ public class MainForm : Form
         _lvDisplays.Columns.Add("Refresh Rate", 90);
         _lvDisplays.Columns.Add("Depth", 70);
         _lvDisplays.Columns.Add("Primary", 80);
+        ListViewColumnSorter.Attach(_lvDisplays);
         pnlTop.Controls.Add(_lvDisplays);
 
         var pnlMid = new GroupBox
@@ -504,6 +505,7 @@ public class MainForm : Form
         _lvApps.Columns.Add("State", 120);
         _lvApps.Columns.Add("Protection / Whitelist", 140);
         _lvApps.Columns.Add("Details", 220);
+        ListViewColumnSorter.Attach(_lvApps);
 
         var pnlActions = new Panel
         {
@@ -665,6 +667,7 @@ public class MainForm : Form
         _lvBenchmarkResults.Columns.Add("AFTER (Profile)", 140);
         _lvBenchmarkResults.Columns.Add("Delta Variation", 120);
         _lvBenchmarkResults.Columns.Add("Evaluation", 140);
+        ListViewColumnSorter.Attach(_lvBenchmarkResults);
 
         var grpVerdict = new GroupBox
         {
@@ -741,6 +744,7 @@ public class MainForm : Form
         _lvDiagnosticFindings.Columns.Add("Component / App", 150);
         _lvDiagnosticFindings.Columns.Add("Human Explanation", 360);
         _lvDiagnosticFindings.Columns.Add("Recommended Action", 170);
+        ListViewColumnSorter.Attach(_lvDiagnosticFindings);
 
         grpDiagnostic.Controls.Add(_lvDiagnosticFindings);
         grpDiagnostic.Controls.Add(pnlDiagTop);
@@ -828,6 +832,7 @@ public class MainForm : Form
         _lvSmartProfiles.Columns.Add("Trigger Process", 130);
         _lvSmartProfiles.Columns.Add("Description", 350);
         _lvSmartProfiles.Columns.Add("CPU Isolation", 100);
+        ListViewColumnSorter.Attach(_lvSmartProfiles);
 
         var pnlSmartBottom = new Panel
         {
@@ -937,6 +942,7 @@ public class MainForm : Form
         };
         _lvSecondaryOffenders.Columns.Add("Process & Window Title", 450);
         _lvSecondaryOffenders.Columns.Add("Impact on Primary Monitor", 300);
+        ListViewColumnSorter.Attach(_lvSecondaryOffenders);
 
         var pnlActions = new Panel
         {
@@ -982,6 +988,7 @@ public class MainForm : Form
         _lblMultiMonitorSummary.Text = $"Monitors: {analysis.TotalMonitors} | Range: {analysis.MinRefreshRateHz} Hz - {analysis.MaxRefreshRateHz} Hz\n" +
                                        $"[{riskColor}]\n{analysis.VrrRiskReason}";
 
+        _lvSecondaryOffenders.BeginUpdate();
         _lvSecondaryOffenders.Items.Clear();
         foreach (var app in analysis.SecondaryMonitorRunningApps)
         {
@@ -998,6 +1005,12 @@ public class MainForm : Form
             item.ForeColor = Color.DarkGreen;
             _lvSecondaryOffenders.Items.Add(item);
         }
+
+        if (_lvSecondaryOffenders.ListViewItemSorter is ListViewColumnSorter secSorter && secSorter.Order != SortOrder.None)
+        {
+            _lvSecondaryOffenders.Sort();
+        }
+        _lvSecondaryOffenders.EndUpdate();
     }
     #endregion
 
@@ -1030,6 +1043,7 @@ public class MainForm : Form
         _lvThemes.Columns.Add("Theme Name", 180);
         _lvThemes.Columns.Add("Description", 420);
         _lvThemes.Columns.Add("Preset", 120);
+        ListViewColumnSorter.Attach(_lvThemes);
 
         foreach (var th in _retroShellEngine.AvailableThemes)
         {
@@ -1103,6 +1117,7 @@ public class MainForm : Form
     #region Business Logic & Orchestration
     private void LoadSmartProfilesList()
     {
+        _lvSmartProfiles.BeginUpdate();
         _lvSmartProfiles.Items.Clear();
         foreach (var p in _smartProfileManager.Profiles)
         {
@@ -1112,10 +1127,17 @@ public class MainForm : Form
             item.SubItems.Add(p.IsolateCpuCores ? "YES" : "No");
             _lvSmartProfiles.Items.Add(item);
         }
+
+        if (_lvSmartProfiles.ListViewItemSorter is ListViewColumnSorter smartSorter && smartSorter.Order != SortOrder.None)
+        {
+            _lvSmartProfiles.Sort();
+        }
+        _lvSmartProfiles.EndUpdate();
     }
 
     private void RunDesktopDiagnostic()
     {
+        _lvDiagnosticFindings.BeginUpdate();
         _lvDiagnosticFindings.Items.Clear();
         var findings = _diagnosticAnalyzer.AnalyzeCurrentInterference();
 
@@ -1137,6 +1159,12 @@ public class MainForm : Form
 
             _lvDiagnosticFindings.Items.Add(item);
         }
+
+        if (_lvDiagnosticFindings.ListViewItemSorter is ListViewColumnSorter diagSorter && diagSorter.Order != SortOrder.None)
+        {
+            _lvDiagnosticFindings.Sort();
+        }
+        _lvDiagnosticFindings.EndUpdate();
 
         AppendLog($"[DIAGNOSTIC] Analyzed desktop interference: {findings.Count} findings.");
     }
@@ -1167,6 +1195,7 @@ public class MainForm : Form
         lv.Columns.Add("Category", 110);
         lv.Columns.Add("Vendor", 90);
         lv.Columns.Add("Technical Impact & Safety Details", 280);
+        ListViewColumnSorter.Attach(lv);
 
         foreach (var entry in _backgroundDatabase.GetAllEntries())
         {
@@ -1252,6 +1281,7 @@ public class MainForm : Form
                                        $"Active System Processes: {hw.TotalProcessesCount} | Threads: {hw.TotalThreadsCount}";
 
             // Displays
+            _lvDisplays.BeginUpdate();
             _lvDisplays.Items.Clear();
             foreach (var d in hw.Displays)
             {
@@ -1262,6 +1292,11 @@ public class MainForm : Form
                 item.SubItems.Add(d.IsPrimary ? "YES" : "No");
                 _lvDisplays.Items.Add(item);
             }
+            if (_lvDisplays.ListViewItemSorter is ListViewColumnSorter dispSorter && dispSorter.Order != SortOrder.None)
+            {
+                _lvDisplays.Sort();
+            }
+            _lvDisplays.EndUpdate();
 
             // Visuals
             var vis = _visualEffects.CaptureCurrentVisualState();
@@ -1287,6 +1322,7 @@ public class MainForm : Form
 
     private void RefreshBackgroundApps()
     {
+        _lvApps.BeginUpdate();
         _lvApps.Items.Clear();
         var apps = _processes.ScanManagedApps();
 
@@ -1309,6 +1345,12 @@ public class MainForm : Form
 
             _lvApps.Items.Add(item);
         }
+
+        if (_lvApps.ListViewItemSorter is ListViewColumnSorter sorter && sorter.Order != SortOrder.None)
+        {
+            _lvApps.Sort();
+        }
+        _lvApps.EndUpdate();
     }
 
     private void UpdateStatusLabels()
