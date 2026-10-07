@@ -258,4 +258,74 @@ public class CoreTests
             if (File.Exists(tempProfilesPath)) File.Delete(tempProfilesPath);
         }
     }
+
+    [Fact]
+    public void MultiMonitorOptimizer_AnalyzesDisplayTopology()
+    {
+        var hwInspector = new HardwareInspector();
+        var optimizer = new MultiMonitorOptimizer(hwInspector);
+
+        var analysis = optimizer.AnalyzeDisplays();
+        Assert.NotNull(analysis);
+        Assert.True(analysis.TotalMonitors >= 1);
+        Assert.True(analysis.MaxRefreshRateHz > 0);
+        Assert.NotNull(analysis.VrrRiskReason);
+        Assert.NotNull(analysis.SecondaryMonitorRunningApps);
+    }
+
+    [Fact]
+    public async Task AdvancedBenchmarkEngine_MeasuresTimerResolution()
+    {
+        var baseEngine = new BenchmarkEngine();
+        var advEngine = new AdvancedBenchmarkEngine(baseEngine);
+
+        var sample = await advEngine.SampleAdvancedAsync(1000);
+        Assert.NotNull(sample);
+        Assert.True(sample.CurrentTimerResolutionMs > 0, "Timer resolution must be positive");
+        Assert.True(sample.EstimatedP1JitterMs >= 0);
+    }
+
+    [Fact]
+    public void RetroShellEngine_ProvidesAuthenticThemes()
+    {
+        var shell = new RetroShellEngine();
+        Assert.Equal(4, shell.AvailableThemes.Count);
+
+        var win95 = shell.GetTheme(RetroThemePreset.Windows95Classic);
+        Assert.Equal("Windows 95 Classic", win95.DisplayName);
+
+        var win98 = shell.GetTheme(RetroThemePreset.Windows98Plus);
+        Assert.Equal("Windows 98 Plus!", win98.DisplayName);
+
+        var win2000 = shell.GetTheme(RetroThemePreset.Windows2000Pro);
+        Assert.Equal("Windows 2000 Professional", win2000.DisplayName);
+
+        var oled = shell.GetTheme(RetroThemePreset.HighContrastOledBlack);
+        Assert.Equal("High Contrast Performance (OLED 0-Nit)", oled.DisplayName);
+        Assert.Equal(Color.Black, oled.BackgroundColor);
+    }
+
+    [Fact]
+    public void ProfileLearner_RecordsAndGeneratesSuggestions()
+    {
+        string tempLearnerPath = Path.Combine(Path.GetTempPath(), $"learner_test_{Guid.NewGuid():N}.json");
+        try
+        {
+            var learner = new ProfileLearner(tempLearnerPath);
+            Assert.Empty(learner.History);
+
+            // Record session
+            learner.RecordSession("cs2", new[] { "Discord", "steam", "Spotify" });
+            learner.RecordSession("cs2", new[] { "Discord", "steam" });
+            Assert.Equal(2, learner.History.Count);
+
+            var suggestions = learner.GenerateIntelligentSuggestions();
+            Assert.NotEmpty(suggestions);
+            Assert.Contains(suggestions, s => s.SuggestionTitle.Contains("Discord"));
+        }
+        finally
+        {
+            if (File.Exists(tempLearnerPath)) File.Delete(tempLearnerPath);
+        }
+    }
 }

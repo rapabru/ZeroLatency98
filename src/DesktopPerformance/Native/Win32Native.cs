@@ -109,6 +109,22 @@ public static class Win32Native
     #endregion
 
     #region User32
+    public const int COLOR_BACKGROUND = 1;
+    public const int COLOR_ACTIVECAPTION = 2;
+    public const int COLOR_WINDOW = 5;
+    public const int COLOR_WINDOWTEXT = 8;
+    public const int COLOR_BTNFACE = 15;
+    public const int COLOR_BTNSHADOW = 16;
+    public const int COLOR_HIGHLIGHT = 13;
+    public const int COLOR_GRADIENTACTIVECAPTION = 27;
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool SetSysColors(int cElements, int[] lpaElements, uint[] lpaRgbValues);
+
+    [DllImport("user32.dll")]
+    public static extern uint GetSysColor(int nIndex);
+
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool SystemParametersInfo(uint uiAction, uint uiParam, ref ANIMATIONINFO pvParam, uint fWinIni);
@@ -174,5 +190,8 @@ public static class Win32Native
 
     [DllImport("ntdll.dll", SetLastError = true)]
     public static extern int NtResumeProcess(IntPtr processHandle);
+
+    [DllImport("ntdll.dll", SetLastError = true)]
+    public static extern int NtQueryTimerResolution(out uint MinimumResolution, out uint MaximumResolution, out uint CurrentResolution);
     #endregion
 }

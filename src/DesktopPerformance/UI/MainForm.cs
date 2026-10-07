@@ -18,6 +18,10 @@ public class MainForm : Form
     private readonly DesktopBusyAnalyzer _diagnosticAnalyzer;
     private readonly BackgroundDatabase _backgroundDatabase;
     private readonly ExportManager _exportManager;
+    private readonly MultiMonitorOptimizer _multiMonitorOptimizer;
+    private readonly AdvancedBenchmarkEngine _advancedBenchmarkEngine;
+    private readonly RetroShellEngine _retroShellEngine;
+    private readonly ProfileLearner _profileLearner;
 
     private BenchmarkComparison? _lastBenchmarkComparison;
 
@@ -51,6 +55,7 @@ public class MainForm : Form
 
     // Tab 4: Benchmark
     private RetroButton _btnRunBenchmark = null!;
+    private RetroButton _btnRunAdvancedBenchmark = null!;
     private Label _lblBenchmarkStatus = null!;
     private ListView _lvBenchmarkResults = null!;
     private TextBox _txtBenchmarkVerdict = null!;
@@ -65,6 +70,18 @@ public class MainForm : Form
     private Label _lblWatcherStatus = null!;
     private ListView _lvSmartProfiles = null!;
     private RetroButton _btnApplySmartProfile = null!;
+    private TextBox _txtLearningSuggestions = null!;
+
+    // Tab 6: Multi-Monitor & VRR Studio
+    private Label _lblMultiMonitorSummary = null!;
+    private ListView _lvSecondaryOffenders = null!;
+    private RetroButton _btnAnalyzeMonitors = null!;
+    private RetroButton _btnBlankSecondary = null!;
+
+    // Tab 7: Retro Desktop Shell & Themes
+    private ListView _lvThemes = null!;
+    private RetroButton _btnApplyTheme = null!;
+    private TextBox _txtShellGuide = null!;
 
     // Status bar
     private StatusStrip _statusStrip = null!;
@@ -86,6 +103,10 @@ public class MainForm : Form
         _diagnosticAnalyzer = new DesktopBusyAnalyzer(_hardwareInspector);
         _backgroundDatabase = new BackgroundDatabase();
         _exportManager = new ExportManager();
+        _multiMonitorOptimizer = new MultiMonitorOptimizer(_hardwareInspector);
+        _advancedBenchmarkEngine = new AdvancedBenchmarkEngine(_benchmarkEngine);
+        _retroShellEngine = new RetroShellEngine();
+        _profileLearner = new ProfileLearner();
 
         InitializeComponent();
         _profileEngine.Initialize();
@@ -132,6 +153,11 @@ public class MainForm : Form
     {
         AppendLog($"[AUTO-DETECTOR] Process '{proc}' started! Automatically applied profile: '{profile.Name}'.");
         _lblWatcherStatus.Text = $"Active Game Hook: {proc} (Profile: {profile.Name})";
+
+        // Log session into local pattern learner
+        var activeApps = _processes.ScanManagedApps().Where(a => a.CurrentState != ProcessExecutionState.NotRunning).Select(a => a.ProcessName);
+        _profileLearner.RecordSession(proc, activeApps);
+
         RefreshAllData();
     }
 
@@ -153,9 +179,9 @@ public class MainForm : Form
         SuspendLayout();
 
         Text = "Desktop Performance - Low-Interference Mode [Win98]";
-        Width = 860;
-        Height = 670;
-        MinimumSize = new Size(800, 600);
+        Width = 880;
+        Height = 680;
+        MinimumSize = new Size(820, 620);
         StartPosition = FormStartPosition.CenterScreen;
         BackColor = RetroTheme.BackgroundColor;
         Font = RetroTheme.DefaultFont;
@@ -195,7 +221,7 @@ public class MainForm : Form
                 "Desktop Performance & Low-Interference Mode\n\n" +
                 "Authentic Windows 98/2000 Retro Aesthetics for Windows 11.\n" +
                 "Zero bloat, zero placebo, transactional snapshots with 1-click restore.\n\n" +
-                "Version 1.0 (Phase 2 & Phase 3 Advanced)",
+                "Version 1.2 (Full Phase 3 Implementation)",
                 "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
         });
 
@@ -243,6 +269,8 @@ public class MainForm : Form
         BuildBackgroundManagerTab();
         BuildBenchmarkTab();
         BuildDiagnosticsAndSmartProfilesTab();
+        BuildMultiMonitorTab();
+        BuildRetroShellTab();
 
         // 5. StatusStrip
         _statusStrip = new StatusStrip
@@ -594,28 +622,37 @@ public class MainForm : Form
                    "Este módulo toma muestras antes y después de aplicar el perfil. Si la diferencia es menor al 2.0%,\n" +
                    "se reportará honestamente: 'No measurable improvement detected'.",
             Location = new Point(12, 22),
-            Size = new Size(480, 52),
+            Size = new Size(420, 52),
             Font = RetroTheme.DefaultFont
         };
 
         _btnRunBenchmark = new RetroButton
         {
             Text = "[ RUN BENCHMARK ]",
-            Location = new Point(500, 26),
-            Size = new Size(150, 44),
+            Location = new Point(440, 26),
+            Size = new Size(140, 44),
             Font = RetroTheme.BoldFont
         };
         _btnRunBenchmark.Click += async (s, e) => await RunBenchmarkAsync();
 
+        _btnRunAdvancedBenchmark = new RetroButton
+        {
+            Text = "[ TRILATERAL TEST ]",
+            Location = new Point(586, 26),
+            Size = new Size(140, 44),
+            Font = RetroTheme.BoldFont
+        };
+        _btnRunAdvancedBenchmark.Click += async (s, e) => await RunTrilateralBenchmarkAsync();
+
         _btnExportBenchmark = new RetroButton
         {
             Text = "Export JSON",
-            Location = new Point(660, 26),
-            Size = new Size(120, 44)
+            Location = new Point(732, 26),
+            Size = new Size(100, 44)
         };
         _btnExportBenchmark.Click += (s, e) => ExportBenchmark();
 
-        pnlHeader.Controls.AddRange(new Control[] { lblNotice, _btnRunBenchmark, _btnExportBenchmark });
+        pnlHeader.Controls.AddRange(new Control[] { lblNotice, _btnRunBenchmark, _btnRunAdvancedBenchmark, _btnExportBenchmark });
 
         _lblBenchmarkStatus = new Label
         {
@@ -684,7 +721,7 @@ public class MainForm : Form
         {
             Text = "Diagnostic: Why Is My Desktop Busy?",
             Dock = DockStyle.Top,
-            Height = 220,
+            Height = 180,
             Font = RetroTheme.BoldFont
         };
 
@@ -808,7 +845,7 @@ public class MainForm : Form
         var pnlSmartBottom = new Panel
         {
             Dock = DockStyle.Bottom,
-            Height = 36
+            Height = 80
         };
 
         _btnApplySmartProfile = new RetroButton
@@ -831,7 +868,20 @@ public class MainForm : Form
                 }
             }
         };
-        pnlSmartBottom.Controls.Add(_btnApplySmartProfile);
+
+        _txtLearningSuggestions = new TextBox
+        {
+            Location = new Point(210, 4),
+            Size = new Size(620, 72),
+            Multiline = true,
+            ReadOnly = true,
+            Font = RetroTheme.DefaultFont,
+            BackColor = Color.White,
+            BorderStyle = BorderStyle.Fixed3D
+        };
+        UpdateLearningSuggestions();
+
+        pnlSmartBottom.Controls.AddRange(new Control[] { _btnApplySmartProfile, _txtLearningSuggestions });
 
         grpSmartProfiles.Controls.Add(_lvSmartProfiles);
         grpSmartProfiles.Controls.Add(pnlSmartBottom);
@@ -845,6 +895,225 @@ public class MainForm : Form
         LoadSmartProfilesList();
     }
 
+    private void UpdateLearningSuggestions()
+    {
+        var suggestions = _profileLearner.GenerateIntelligentSuggestions();
+        if (suggestions.Count > 0)
+        {
+            var s = suggestions[0];
+            _txtLearningSuggestions.Text = $"[Smart Pattern Suggestion: {s.SuggestionTitle}]\n{s.Explanation}\n-> {s.RecommendedAction}";
+        }
+    }
+    #endregion
+
+    #region Tab 6: Multi-Monitor & VRR Studio
+    private void BuildMultiMonitorTab()
+    {
+        var tab = new TabPage("Multi-Monitor Studio & VRR")
+        {
+            BackColor = RetroTheme.BackgroundColor,
+            Padding = new Padding(8)
+        };
+
+        var grpVRR = new GroupBox
+        {
+            Text = "VRR (G-Sync/FreeSync) & Compositor Desync Analysis",
+            Dock = DockStyle.Top,
+            Height = 110,
+            Font = RetroTheme.BoldFont
+        };
+
+        _lblMultiMonitorSummary = new Label
+        {
+            Dock = DockStyle.Fill,
+            Padding = new Padding(8),
+            Font = RetroTheme.DefaultFont,
+            Text = "Analyzing multi-monitor configuration..."
+        };
+        grpVRR.Controls.Add(_lblMultiMonitorSummary);
+
+        var grpOffenders = new GroupBox
+        {
+            Text = "Secondary Monitor Hardware-Accelerated Windows",
+            Dock = DockStyle.Fill,
+            Font = RetroTheme.BoldFont
+        };
+
+        _lvSecondaryOffenders = new ListView
+        {
+            Dock = DockStyle.Fill,
+            View = View.Details,
+            FullRowSelect = true,
+            GridLines = true,
+            Font = RetroTheme.DefaultFont,
+            BorderStyle = BorderStyle.Fixed3D
+        };
+        _lvSecondaryOffenders.Columns.Add("Process & Window Title", 450);
+        _lvSecondaryOffenders.Columns.Add("Impact on Primary Monitor", 300);
+
+        var pnlActions = new Panel
+        {
+            Dock = DockStyle.Bottom,
+            Height = 40
+        };
+
+        _btnAnalyzeMonitors = new RetroButton
+        {
+            Text = "Analyze Multi-Display Desync",
+            Location = new Point(4, 6),
+            Size = new Size(200, 28)
+        };
+        _btnAnalyzeMonitors.Click += (s, e) => RefreshMultiMonitorTab();
+
+        _btnBlankSecondary = new RetroButton
+        {
+            Text = "Apply Static Background to Secondary Monitors",
+            Location = new Point(210, 6),
+            Size = new Size(280, 28)
+        };
+        _btnBlankSecondary.Click += (s, e) =>
+        {
+            _multiMonitorOptimizer.ApplySecondaryDisplayStaticBackground(true);
+            AppendLog("[MULTI-MONITOR] Forced static desktop pattern to eliminate DirectComposition secondary repaints.");
+        };
+
+        pnlActions.Controls.AddRange(new Control[] { _btnAnalyzeMonitors, _btnBlankSecondary });
+
+        grpOffenders.Controls.Add(_lvSecondaryOffenders);
+        grpOffenders.Controls.Add(pnlActions);
+
+        tab.Controls.Add(grpOffenders);
+        tab.Controls.Add(grpVRR);
+
+        _tabControl.TabPages.Add(tab);
+    }
+
+    private void RefreshMultiMonitorTab()
+    {
+        var analysis = _multiMonitorOptimizer.AnalyzeDisplays();
+        string riskColor = analysis.IsVrrAtRisk ? "WARNING: VRR / DWM Desync Risk Detected" : "STATUS: Safe / Optimal";
+        _lblMultiMonitorSummary.Text = $"Monitors: {analysis.TotalMonitors} | Range: {analysis.MinRefreshRateHz} Hz - {analysis.MaxRefreshRateHz} Hz\n" +
+                                       $"[{riskColor}]\n{analysis.VrrRiskReason}";
+
+        _lvSecondaryOffenders.Items.Clear();
+        foreach (var app in analysis.SecondaryMonitorRunningApps)
+        {
+            var item = new ListViewItem(app);
+            item.SubItems.Add("Draws 60 fps to GPU; risk of v-blank stalls on primary display");
+            item.ForeColor = Color.DarkRed;
+            _lvSecondaryOffenders.Items.Add(item);
+        }
+
+        if (analysis.SecondaryMonitorRunningApps.Count == 0)
+        {
+            var item = new ListViewItem("No problematic hardware-accelerated windows found on secondary displays");
+            item.SubItems.Add("Low interference confirmed");
+            item.ForeColor = Color.DarkGreen;
+            _lvSecondaryOffenders.Items.Add(item);
+        }
+    }
+    #endregion
+
+    #region Tab 7: Retro Shell & Themes
+    private void BuildRetroShellTab()
+    {
+        var tab = new TabPage("Retro Shell & Themes")
+        {
+            BackColor = RetroTheme.BackgroundColor,
+            Padding = new Padding(8)
+        };
+
+        var grpThemes = new GroupBox
+        {
+            Text = "Classic Windows Visual Theme Presets",
+            Dock = DockStyle.Top,
+            Height = 200,
+            Font = RetroTheme.BoldFont
+        };
+
+        _lvThemes = new ListView
+        {
+            Dock = DockStyle.Fill,
+            View = View.Details,
+            FullRowSelect = true,
+            GridLines = true,
+            Font = RetroTheme.DefaultFont,
+            BorderStyle = BorderStyle.Fixed3D
+        };
+        _lvThemes.Columns.Add("Theme Name", 180);
+        _lvThemes.Columns.Add("Description", 420);
+        _lvThemes.Columns.Add("Preset", 120);
+
+        foreach (var th in _retroShellEngine.AvailableThemes)
+        {
+            var item = new ListViewItem(th.DisplayName);
+            item.SubItems.Add(th.Description);
+            item.SubItems.Add(th.Preset.ToString());
+            _lvThemes.Items.Add(item);
+        }
+
+        var pnlThemeActions = new Panel
+        {
+            Dock = DockStyle.Bottom,
+            Height = 36
+        };
+
+        _btnApplyTheme = new RetroButton
+        {
+            Text = "Apply Selected Visual Palette",
+            Location = new Point(4, 4),
+            Size = new Size(220, 28)
+        };
+        _btnApplyTheme.Click += (s, e) =>
+        {
+            if (_lvThemes.SelectedItems.Count > 0)
+            {
+                var presetStr = _lvThemes.SelectedItems[0].SubItems[2].Text;
+                if (Enum.TryParse<RetroThemePreset>(presetStr, out var preset))
+                {
+                    _retroShellEngine.ApplySysColorsTheme(preset);
+                    AppendLog($"[RETRO-THEME] Applied classic visual theme palette: {preset}");
+                }
+            }
+        };
+        pnlThemeActions.Controls.Add(_btnApplyTheme);
+
+        grpThemes.Controls.Add(_lvThemes);
+        grpThemes.Controls.Add(pnlThemeActions);
+
+        var grpGuide = new GroupBox
+        {
+            Text = "Safe Retro Shell Ecosystem Guide",
+            Dock = DockStyle.Fill,
+            Font = RetroTheme.BoldFont
+        };
+
+        _txtShellGuide = new TextBox
+        {
+            Dock = DockStyle.Fill,
+            Multiline = true,
+            ReadOnly = true,
+            Font = RetroTheme.DefaultFont,
+            BackColor = Color.White,
+            BorderStyle = BorderStyle.Fixed3D,
+            Text = "RECOMENDACIONES PARA EL SHELL RETRO COMPLETO (WINDOWS 11):\n\n" +
+                   "1. Open-Shell (Recomendado - SAFE):\n" +
+                   "   Reemplaza el menú inicio por un menú Win32 nativo estilo Windows 98/2000. Cero uso de GPU, sin inyecciones destructivas.\n\n" +
+                   "2. Windhawk (Recomendado para Mods de Ventanas - LOW RISK):\n" +
+                   "   Aplica mods de bordes cuadrados clásicos en RAM sin alterar archivos en disco de Windows.\n\n" +
+                   "3. ExplorerPatcher (ADVERTENCIA - HIGH RISK):\n" +
+                   "   No recomendado. Inyecta dxgi.dll en explorer.exe y suele provocar bloqueos de arranque con cada actualización acumulativa mensual de Windows 11."
+        };
+        grpGuide.Controls.Add(_txtShellGuide);
+
+        tab.Controls.Add(grpGuide);
+        tab.Controls.Add(grpThemes);
+
+        _tabControl.TabPages.Add(tab);
+    }
+    #endregion
+
+    #region Business Logic & Orchestration
     private void LoadSmartProfilesList()
     {
         _lvSmartProfiles.Items.Clear();
@@ -979,9 +1248,7 @@ public class MainForm : Form
             }
         }
     }
-    #endregion
 
-    #region Business Logic & Orchestration
     private void RefreshAllData()
     {
         try
@@ -1018,6 +1285,9 @@ public class MainForm : Form
 
             // Background apps
             RefreshBackgroundApps();
+
+            // Multi-monitor tab
+            RefreshMultiMonitorTab();
 
             // Status bar
             UpdateStatusLabels();
@@ -1158,6 +1428,63 @@ public class MainForm : Form
         finally
         {
             _btnRunBenchmark.Enabled = true;
+        }
+    }
+
+    private async Task RunTrilateralBenchmarkAsync()
+    {
+        _btnRunAdvancedBenchmark.Enabled = false;
+        _lvBenchmarkResults.Items.Clear();
+        _txtBenchmarkVerdict.Text = "Running Advanced Trilateral Benchmark (Normal vs Low vs Max)...";
+
+        try
+        {
+            var progress = new Progress<string>(msg => _lblBenchmarkStatus.Text = msg);
+
+            // 1. Normal
+            _lblBenchmarkStatus.Text = "Trilateral 1/3: Measuring NORMAL Baseline...";
+            await _profileEngine.RestoreToNormalAsync();
+            await Task.Delay(1000);
+            var mNormal = await _advancedBenchmarkEngine.SampleAdvancedAsync(2500, progress);
+
+            // 2. Low Interference
+            _lblBenchmarkStatus.Text = "Trilateral 2/3: Measuring LOW INTERFERENCE...";
+            await _profileEngine.ApplyProfileAsync(ProfileType.LowInterference);
+            await Task.Delay(1000);
+            var mLow = await _advancedBenchmarkEngine.SampleAdvancedAsync(2500, progress);
+
+            // 3. Max Response
+            _lblBenchmarkStatus.Text = "Trilateral 3/3: Measuring MAX RESPONSE...";
+            await _profileEngine.ApplyProfileAsync(ProfileType.MaxResponse);
+            await Task.Delay(1000);
+            var mMax = await _advancedBenchmarkEngine.SampleAdvancedAsync(2500, progress);
+
+            var report = new TrilateralBenchmarkReport
+            {
+                NormalBaseline = mNormal,
+                LowInterference = mLow,
+                MaxResponse = mMax
+            };
+
+            AddMetricRow("Context Switches/s", $"{mNormal.ContextSwitchesPerSecond:N0}", $"{mMax.ContextSwitchesPerSecond:N0}", $"{report.ContextSwitchesReductionPercent:+0.0;-0.0}%", report.ContextSwitchesReductionPercent <= -2.0 ? "IMPROVED" : "NOISE");
+            AddMetricRow("NT Timer Resolution", $"{mNormal.CurrentTimerResolutionMs:F3} ms", $"{mMax.CurrentTimerResolutionMs:F3} ms", $"{mMax.CurrentTimerResolutionMs - mNormal.CurrentTimerResolutionMs:+0.000;-0.000} ms", "INFO");
+            AddMetricRow("P1 Jitter (Queue wait)", $"{mNormal.EstimatedP1JitterMs:F2} ms", $"{mMax.EstimatedP1JitterMs:F2} ms", $"{((mMax.EstimatedP1JitterMs - mNormal.EstimatedP1JitterMs)/mNormal.EstimatedP1JitterMs)*100:+0.0;-0.0}%", "ESTIMATE");
+            AddMetricRow("DWM Memory (MB)", $"{mNormal.DwmWorkingSetMB:F1} MB", $"{mMax.DwmWorkingSetMB:F1} MB", $"{report.DwmMemoryReductionPercent:+0.0;-0.0}%", report.DwmMemoryReductionPercent <= -2.0 ? "IMPROVED" : "NOISE");
+
+            _txtBenchmarkVerdict.Text = $"[TRILATERAL VERDICT]\n{report.SummaryText}\n" +
+                                        $"Timer resolution is running at {mMax.CurrentTimerResolutionMs:F3} ms (Native precision range: {mMax.MinTimerResolutionMs:F3} - {mMax.MaxTimerResolutionMs:F3} ms).";
+
+            _lblBenchmarkStatus.Text = "Trilateral benchmark complete.";
+            AppendLog($"[TRILATERAL] Complete: {report.SummaryText}");
+            RefreshAllData();
+        }
+        catch (Exception ex)
+        {
+            _txtBenchmarkVerdict.Text = $"Trilateral error: {ex.Message}";
+        }
+        finally
+        {
+            _btnRunAdvancedBenchmark.Enabled = true;
         }
     }
 
