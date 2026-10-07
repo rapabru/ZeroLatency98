@@ -31,13 +31,44 @@ public class MainForm : Form
     private Label _lblSummary = null!;
     private TabControl _tabControl = null!;
 
+    // Menu controls for localization
+    private ToolStripMenuItem _menuFile = null!;
+    private ToolStripMenuItem _menuRefreshAll = null!;
+    private ToolStripMenuItem _menuExportBenchmark = null!;
+    private ToolStripMenuItem _menuExportProfiles = null!;
+    private ToolStripMenuItem _menuExit = null!;
+
+    private ToolStripMenuItem _menuProfiles = null!;
+    private ToolStripMenuItem _menuProfileNormal = null!;
+    private ToolStripMenuItem _menuProfileLow = null!;
+    private ToolStripMenuItem _menuProfileMax = null!;
+    private ToolStripMenuItem _menuRestoreNormal = null!;
+
+    private ToolStripMenuItem _menuDiagnostics = null!;
+    private ToolStripMenuItem _menuWhyBusy = null!;
+    private ToolStripMenuItem _menuProcessDb = null!;
+
+    private ToolStripMenuItem _menuLanguage = null!;
+    private ToolStripMenuItem _menuLangEnglish = null!;
+    private ToolStripMenuItem _menuLangSpanish = null!;
+
+    private ToolStripMenuItem _menuHelp = null!;
+    private ToolStripMenuItem _menuAbout = null!;
+
     // Tab 1: Topology
+    private TabPage _tabTopology = null!;
+    private GroupBox _grpTopologyDisplays = null!;
+    private GroupBox _grpTopologyHardware = null!;
+    private GroupBox _grpTopologyVisual = null!;
     private ListView _lvDisplays = null!;
     private Label _lblHardwareDetails = null!;
     private Label _lblVisualDetails = null!;
     private RetroButton _btnRefreshTopology = null!;
 
     // Tab 2: Profiles
+    private TabPage _tabProfiles = null!;
+    private GroupBox _grpProfilesSelector = null!;
+    private GroupBox _grpProfilesLog = null!;
     private RadioButton _rbNormal = null!;
     private RadioButton _rbLowInterference = null!;
     private RadioButton _rbMaxResponse = null!;
@@ -46,6 +77,8 @@ public class MainForm : Form
     private TextBox _txtLog = null!;
 
     // Tab 3: Background Manager
+    private TabPage _tabBackground = null!;
+    private Label _lblBackgroundInfo = null!;
     private ListView _lvApps = null!;
     private RetroButton _btnRefreshApps = null!;
     private RetroButton _btnPauseApp = null!;
@@ -53,16 +86,24 @@ public class MainForm : Form
     private RetroButton _btnBackgroundPriority = null!;
 
     // Tab 4: Benchmark
+    private TabPage _tabBenchmark = null!;
+    private GroupBox _grpBenchmarkHeader = null!;
+    private Label _lblBenchmarkNotice = null!;
     private RetroButton _btnRunBenchmark = null!;
     private RetroButton _btnRunAdvancedBenchmark = null!;
     private Label _lblBenchmarkStatus = null!;
     private ListView _lvBenchmarkResults = null!;
+    private GroupBox _grpBenchmarkVerdict = null!;
     private TextBox _txtBenchmarkVerdict = null!;
     private RetroButton _btnExportBenchmark = null!;
 
     // Tab 5: Phase 3 Diagnostics & Smart Profiles
+    private TabPage _tabDiagnostics = null!;
+    private GroupBox _grpDiagnosticWhy = null!;
     private ListView _lvDiagnosticFindings = null!;
     private RetroButton _btnRunDiagnostic = null!;
+    private GroupBox _grpSmartProfiles = null!;
+    private Label _lblGameMode = null!;
     private RadioButton _rbAutoGame = null!;
     private RadioButton _rbManualGame = null!;
     private RadioButton _rbDisabledGame = null!;
@@ -72,14 +113,19 @@ public class MainForm : Form
     private TextBox _txtLearningSuggestions = null!;
 
     // Tab 6: Multi-Monitor & VRR Studio
+    private TabPage _tabMultiMonitor = null!;
     private Label _lblMultiMonitorSummary = null!;
+    private GroupBox _grpMultiMonitorOffenders = null!;
     private ListView _lvSecondaryOffenders = null!;
     private RetroButton _btnAnalyzeMonitors = null!;
     private RetroButton _btnBlankSecondary = null!;
 
     // Tab 7: Retro Desktop Shell & Themes
+    private TabPage _tabRetroShell = null!;
+    private GroupBox _grpRetroThemes = null!;
     private ListView _lvThemes = null!;
     private RetroButton _btnApplyTheme = null!;
+    private GroupBox _grpRetroGuide = null!;
     private TextBox _txtShellGuide = null!;
 
     // Status bar
@@ -108,6 +154,8 @@ public class MainForm : Form
         _profileLearner = new ProfileLearner();
 
         InitializeComponent();
+        LocalizationManager.Instance.OnLanguageChanged += ApplyLocalization;
+        ApplyLocalization();
         _profileEngine.Initialize();
         SetupProcessWatcher();
         RefreshAllData();
@@ -194,27 +242,32 @@ public class MainForm : Form
             RenderMode = ToolStripRenderMode.System
         };
 
-        var fileMenu = new ToolStripMenuItem("&File");
-        fileMenu.DropDownItems.Add("&Refresh All Data", null, (s, e) => RefreshAllData());
-        fileMenu.DropDownItems.Add(new ToolStripSeparator());
-        fileMenu.DropDownItems.Add("&Export Benchmark JSON...", null, (s, e) => ExportBenchmark());
-        fileMenu.DropDownItems.Add("&Export Profiles JSON...", null, (s, e) => ExportProfiles());
-        fileMenu.DropDownItems.Add(new ToolStripSeparator());
-        fileMenu.DropDownItems.Add("E&xit", null, (s, e) => Close());
+        _menuFile = new ToolStripMenuItem("&File");
+        _menuRefreshAll = new ToolStripMenuItem("&Refresh All Data", null, (s, e) => RefreshAllData());
+        _menuExportBenchmark = new ToolStripMenuItem("&Export Benchmark JSON...", null, (s, e) => ExportBenchmark());
+        _menuExportProfiles = new ToolStripMenuItem("&Export Profiles JSON...", null, (s, e) => ExportProfiles());
+        _menuExit = new ToolStripMenuItem("E&xit", null, (s, e) => Close());
+        _menuFile.DropDownItems.AddRange(new ToolStripItem[] { _menuRefreshAll, new ToolStripSeparator(), _menuExportBenchmark, _menuExportProfiles, new ToolStripSeparator(), _menuExit });
 
-        var profilesMenu = new ToolStripMenuItem("&Profiles");
-        profilesMenu.DropDownItems.Add("&Normal (Baseline)", null, async (s, e) => await ApplyProfile(ProfileType.Normal));
-        profilesMenu.DropDownItems.Add("&Low Interference", null, async (s, e) => await ApplyProfile(ProfileType.LowInterference));
-        profilesMenu.DropDownItems.Add("&Max Response", null, async (s, e) => await ApplyProfile(ProfileType.MaxResponse));
-        profilesMenu.DropDownItems.Add(new ToolStripSeparator());
-        profilesMenu.DropDownItems.Add("&Restore to Normal (Undo All)", null, async (s, e) => await RestoreToNormal());
+        _menuProfiles = new ToolStripMenuItem("&Profiles");
+        _menuProfileNormal = new ToolStripMenuItem("&Normal (Baseline)", null, async (s, e) => await ApplyProfile(ProfileType.Normal));
+        _menuProfileLow = new ToolStripMenuItem("&Low Interference", null, async (s, e) => await ApplyProfile(ProfileType.LowInterference));
+        _menuProfileMax = new ToolStripMenuItem("&Max Response", null, async (s, e) => await ApplyProfile(ProfileType.MaxResponse));
+        _menuRestoreNormal = new ToolStripMenuItem("&Restore to Normal (Undo All)", null, async (s, e) => await RestoreToNormal());
+        _menuProfiles.DropDownItems.AddRange(new ToolStripItem[] { _menuProfileNormal, _menuProfileLow, _menuProfileMax, new ToolStripSeparator(), _menuRestoreNormal });
 
-        var diagMenu = new ToolStripMenuItem("&Diagnostics");
-        diagMenu.DropDownItems.Add("&Why Is My Desktop Busy?", null, (s, e) => RunDesktopDiagnostic());
-        diagMenu.DropDownItems.Add("&Process Safety Database...", null, (s, e) => ShowProcessDatabaseDialog());
+        _menuDiagnostics = new ToolStripMenuItem("&Diagnostics");
+        _menuWhyBusy = new ToolStripMenuItem("&Why Is My Desktop Busy?", null, (s, e) => RunDesktopDiagnostic());
+        _menuProcessDb = new ToolStripMenuItem("&Process Safety Database...", null, (s, e) => ShowProcessDatabaseDialog());
+        _menuDiagnostics.DropDownItems.AddRange(new ToolStripItem[] { _menuWhyBusy, _menuProcessDb });
 
-        var helpMenu = new ToolStripMenuItem("&Help");
-        helpMenu.DropDownItems.Add("&About Win98 Desktop Performance Mode", null, (s, e) =>
+        _menuLanguage = new ToolStripMenuItem("&Language");
+        _menuLangEnglish = new ToolStripMenuItem("&English (US)", null, (s, e) => LocalizationManager.Instance.CurrentLanguage = AppLanguage.English);
+        _menuLangSpanish = new ToolStripMenuItem("&Español", null, (s, e) => LocalizationManager.Instance.CurrentLanguage = AppLanguage.Spanish);
+        _menuLanguage.DropDownItems.AddRange(new ToolStripItem[] { _menuLangEnglish, _menuLangSpanish });
+
+        _menuHelp = new ToolStripMenuItem("&Help");
+        _menuAbout = new ToolStripMenuItem("&About Win98 Desktop Performance Mode", null, (s, e) =>
         {
             MessageBox.Show(
                 "Desktop Performance & Low-Interference Mode\n\n" +
@@ -223,8 +276,9 @@ public class MainForm : Form
                 "Version 1.2 (Full Phase 3 Implementation)",
                 "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
         });
+        _menuHelp.DropDownItems.Add(_menuAbout);
 
-        _menuStrip.Items.AddRange(new ToolStripItem[] { fileMenu, profilesMenu, diagMenu, helpMenu });
+        _menuStrip.Items.AddRange(new ToolStripItem[] { _menuFile, _menuProfiles, _menuDiagnostics, _menuLanguage, _menuHelp });
 
         // 2. Summary Panel (Sunken)
         _summaryPanel = new RetroPanel
@@ -288,13 +342,13 @@ public class MainForm : Form
     #region Tab 1: System Topology
     private void BuildTopologyTab()
     {
-        var tab = new TabPage("System Topology & Monitors")
+        _tabTopology = new TabPage("System Topology & Monitors")
         {
             BackColor = RetroTheme.BackgroundColor,
             Padding = new Padding(8)
         };
 
-        var pnlTop = new GroupBox
+        _grpTopologyDisplays = new GroupBox
         {
             Text = "Active Displays and Monitors",
             Dock = DockStyle.Top,
@@ -317,9 +371,9 @@ public class MainForm : Form
         _lvDisplays.Columns.Add("Depth", 70);
         _lvDisplays.Columns.Add("Primary", 80);
         ListViewColumnSorter.Attach(_lvDisplays);
-        pnlTop.Controls.Add(_lvDisplays);
+        _grpTopologyDisplays.Controls.Add(_lvDisplays);
 
-        var pnlMid = new GroupBox
+        _grpTopologyHardware = new GroupBox
         {
             Text = "Hardware and Memory State",
             Dock = DockStyle.Top,
@@ -333,9 +387,9 @@ public class MainForm : Form
             Padding = new Padding(8),
             Text = "CPU: ...\nRAM: ...\nGPU: ..."
         };
-        pnlMid.Controls.Add(_lblHardwareDetails);
+        _grpTopologyHardware.Controls.Add(_lblHardwareDetails);
 
-        var pnlBottom = new GroupBox
+        _grpTopologyVisual = new GroupBox
         {
             Text = "Windows 11 Visual Subsystem State",
             Dock = DockStyle.Fill,
@@ -358,27 +412,27 @@ public class MainForm : Form
         };
         _btnRefreshTopology.Click += (s, e) => RefreshAllData();
 
-        pnlBottom.Controls.Add(_lblVisualDetails);
-        pnlBottom.Controls.Add(_btnRefreshTopology);
+        _grpTopologyVisual.Controls.Add(_lblVisualDetails);
+        _grpTopologyVisual.Controls.Add(_btnRefreshTopology);
 
-        tab.Controls.Add(pnlBottom);
-        tab.Controls.Add(pnlMid);
-        tab.Controls.Add(pnlTop);
+        _tabTopology.Controls.Add(_grpTopologyVisual);
+        _tabTopology.Controls.Add(_grpTopologyHardware);
+        _tabTopology.Controls.Add(_grpTopologyDisplays);
 
-        _tabControl.TabPages.Add(tab);
+        _tabControl.TabPages.Add(_tabTopology);
     }
     #endregion
 
     #region Tab 2: Profiles & Optimization
     private void BuildProfilesTab()
     {
-        var tab = new TabPage("Profiles & Optimization")
+        _tabProfiles = new TabPage("Profiles & Optimization")
         {
             BackColor = RetroTheme.BackgroundColor,
             Padding = new Padding(8)
         };
 
-        var grpSelector = new GroupBox
+        _grpProfilesSelector = new GroupBox
         {
             Text = "Performance Profile Selection",
             Dock = DockStyle.Top,
@@ -411,7 +465,7 @@ public class MainForm : Form
             Font = RetroTheme.DefaultFont
         };
 
-        grpSelector.Controls.AddRange(new Control[] { _rbNormal, _rbLowInterference, _rbMaxResponse });
+        _grpProfilesSelector.Controls.AddRange(new Control[] { _rbNormal, _rbLowInterference, _rbMaxResponse });
 
         var pnlButtons = new Panel
         {
@@ -446,7 +500,7 @@ public class MainForm : Form
 
         pnlButtons.Controls.AddRange(new Control[] { _btnApplyProfile, _btnRestoreNormal });
 
-        var grpLog = new GroupBox
+        _grpProfilesLog = new GroupBox
         {
             Text = "Execution & Snapshot Journal",
             Dock = DockStyle.Fill,
@@ -464,26 +518,26 @@ public class MainForm : Form
             ForeColor = Color.Black,
             BorderStyle = BorderStyle.Fixed3D
         };
-        grpLog.Controls.Add(_txtLog);
+        _grpProfilesLog.Controls.Add(_txtLog);
 
-        tab.Controls.Add(grpLog);
-        tab.Controls.Add(pnlButtons);
-        tab.Controls.Add(grpSelector);
+        _tabProfiles.Controls.Add(_grpProfilesLog);
+        _tabProfiles.Controls.Add(pnlButtons);
+        _tabProfiles.Controls.Add(_grpProfilesSelector);
 
-        _tabControl.TabPages.Add(tab);
+        _tabControl.TabPages.Add(_tabProfiles);
     }
     #endregion
 
     #region Tab 3: Background Manager
     private void BuildBackgroundManagerTab()
     {
-        var tab = new TabPage("Background Manager")
+        _tabBackground = new TabPage("Background Manager")
         {
             BackColor = RetroTheme.BackgroundColor,
             Padding = new Padding(8)
         };
 
-        var lblInfo = new Label
+        _lblBackgroundInfo = new Label
         {
             Text = "Supervised background applications. Whitelisted components (Steam, OBS, audio drivers) are permanently protected.",
             Dock = DockStyle.Top,
@@ -580,24 +634,24 @@ public class MainForm : Form
 
         pnlActions.Controls.AddRange(new Control[] { _btnPauseApp, _btnBackgroundPriority, _btnResumeApp, _btnRefreshApps });
 
-        tab.Controls.Add(_lvApps);
-        tab.Controls.Add(pnlActions);
-        tab.Controls.Add(lblInfo);
+        _tabBackground.Controls.Add(_lvApps);
+        _tabBackground.Controls.Add(pnlActions);
+        _tabBackground.Controls.Add(_lblBackgroundInfo);
 
-        _tabControl.TabPages.Add(tab);
+        _tabControl.TabPages.Add(_tabBackground);
     }
     #endregion
 
     #region Tab 4: Benchmark
     private void BuildBenchmarkTab()
     {
-        var tab = new TabPage("Verification & Benchmark")
+        _tabBenchmark = new TabPage("Verification & Benchmark")
         {
             BackColor = RetroTheme.BackgroundColor,
             Padding = new Padding(8)
         };
 
-        var pnlHeader = new GroupBox
+        _grpBenchmarkHeader = new GroupBox
         {
             Text = "Performance Data Helper (PDH) Measurement Engine",
             Dock = DockStyle.Top,
@@ -605,7 +659,7 @@ public class MainForm : Form
             Font = RetroTheme.BoldFont
         };
 
-        var lblNotice = new Label
+        _lblBenchmarkNotice = new Label
         {
             Text = "Principio: 'Medición antes que afirmaciones. No inventar mejoras.'\n" +
                    "Este módulo toma muestras antes y después de aplicar el perfil. Si la diferencia es menor al 2.0%,\n" +
@@ -641,7 +695,7 @@ public class MainForm : Form
         };
         _btnExportBenchmark.Click += (s, e) => ExportBenchmark();
 
-        pnlHeader.Controls.AddRange(new Control[] { lblNotice, _btnRunBenchmark, _btnRunAdvancedBenchmark, _btnExportBenchmark });
+        _grpBenchmarkHeader.Controls.AddRange(new Control[] { _lblBenchmarkNotice, _btnRunBenchmark, _btnRunAdvancedBenchmark, _btnExportBenchmark });
 
         _lblBenchmarkStatus = new Label
         {
@@ -669,7 +723,7 @@ public class MainForm : Form
         _lvBenchmarkResults.Columns.Add("Evaluation", 140);
         ListViewColumnSorter.Attach(_lvBenchmarkResults);
 
-        var grpVerdict = new GroupBox
+        _grpBenchmarkVerdict = new GroupBox
         {
             Text = "Telemetry Verdict",
             Dock = DockStyle.Fill,
@@ -686,28 +740,28 @@ public class MainForm : Form
             BorderStyle = BorderStyle.Fixed3D,
             Text = "Run the benchmark to analyze real-world system noise and interference delta."
         };
-        grpVerdict.Controls.Add(_txtBenchmarkVerdict);
+        _grpBenchmarkVerdict.Controls.Add(_txtBenchmarkVerdict);
 
-        tab.Controls.Add(grpVerdict);
-        tab.Controls.Add(_lvBenchmarkResults);
-        tab.Controls.Add(_lblBenchmarkStatus);
-        tab.Controls.Add(pnlHeader);
+        _tabBenchmark.Controls.Add(_grpBenchmarkVerdict);
+        _tabBenchmark.Controls.Add(_lvBenchmarkResults);
+        _tabBenchmark.Controls.Add(_lblBenchmarkStatus);
+        _tabBenchmark.Controls.Add(_grpBenchmarkHeader);
 
-        _tabControl.TabPages.Add(tab);
+        _tabControl.TabPages.Add(_tabBenchmark);
     }
     #endregion
 
     #region Tab 5: Phase 3 Diagnostics & Smart Profiles
     private void BuildDiagnosticsAndSmartProfilesTab()
     {
-        var tab = new TabPage("Diagnostics & Smart Profiles")
+        _tabDiagnostics = new TabPage("Diagnostics & Smart Profiles")
         {
             BackColor = RetroTheme.BackgroundColor,
             Padding = new Padding(8)
         };
 
         // Section A: Why is my desktop busy?
-        var grpDiagnostic = new GroupBox
+        _grpDiagnosticWhy = new GroupBox
         {
             Text = "Diagnostic: Why Is My Desktop Busy?",
             Dock = DockStyle.Top,
@@ -746,11 +800,11 @@ public class MainForm : Form
         _lvDiagnosticFindings.Columns.Add("Recommended Action", 170);
         ListViewColumnSorter.Attach(_lvDiagnosticFindings);
 
-        grpDiagnostic.Controls.Add(_lvDiagnosticFindings);
-        grpDiagnostic.Controls.Add(pnlDiagTop);
+        _grpDiagnosticWhy.Controls.Add(_lvDiagnosticFindings);
+        _grpDiagnosticWhy.Controls.Add(pnlDiagTop);
 
         // Section B: Smart Profiles & Auto Game Detection
-        var grpSmartProfiles = new GroupBox
+        _grpSmartProfiles = new GroupBox
         {
             Text = "Smart Profiles & Auto Game Detection",
             Dock = DockStyle.Fill,
@@ -763,7 +817,7 @@ public class MainForm : Form
             Height = 60
         };
 
-        var lblMode = new Label
+        _lblGameMode = new Label
         {
             Text = "Game Detection Mode:",
             Location = new Point(4, 6),
@@ -817,7 +871,7 @@ public class MainForm : Form
             ForeColor = Color.DarkBlue
         };
 
-        pnlSmartTop.Controls.AddRange(new Control[] { lblMode, _rbAutoGame, _rbManualGame, _rbDisabledGame, _lblWatcherStatus });
+        pnlSmartTop.Controls.AddRange(new Control[] { _lblGameMode, _rbAutoGame, _rbManualGame, _rbDisabledGame, _lblWatcherStatus });
 
         _lvSmartProfiles = new ListView
         {
@@ -875,14 +929,14 @@ public class MainForm : Form
 
         pnlSmartBottom.Controls.AddRange(new Control[] { _btnApplySmartProfile, _txtLearningSuggestions });
 
-        grpSmartProfiles.Controls.Add(_lvSmartProfiles);
-        grpSmartProfiles.Controls.Add(pnlSmartBottom);
-        grpSmartProfiles.Controls.Add(pnlSmartTop);
+        _grpSmartProfiles.Controls.Add(_lvSmartProfiles);
+        _grpSmartProfiles.Controls.Add(pnlSmartBottom);
+        _grpSmartProfiles.Controls.Add(pnlSmartTop);
 
-        tab.Controls.Add(grpSmartProfiles);
-        tab.Controls.Add(grpDiagnostic);
+        _tabDiagnostics.Controls.Add(_grpSmartProfiles);
+        _tabDiagnostics.Controls.Add(_grpDiagnosticWhy);
 
-        _tabControl.TabPages.Add(tab);
+        _tabControl.TabPages.Add(_tabDiagnostics);
 
         LoadSmartProfilesList();
     }
@@ -901,7 +955,7 @@ public class MainForm : Form
     #region Tab 6: Multi-Monitor & VRR Studio
     private void BuildMultiMonitorTab()
     {
-        var tab = new TabPage("Multi-Monitor Studio & VRR")
+        _tabMultiMonitor = new TabPage("Multi-Monitor Studio & VRR")
         {
             BackColor = RetroTheme.BackgroundColor,
             Padding = new Padding(8)
@@ -924,7 +978,7 @@ public class MainForm : Form
         };
         grpVRR.Controls.Add(_lblMultiMonitorSummary);
 
-        var grpOffenders = new GroupBox
+        _grpMultiMonitorOffenders = new GroupBox
         {
             Text = "Secondary Monitor Hardware-Accelerated Windows",
             Dock = DockStyle.Fill,
@@ -972,13 +1026,13 @@ public class MainForm : Form
 
         pnlActions.Controls.AddRange(new Control[] { _btnAnalyzeMonitors, _btnBlankSecondary });
 
-        grpOffenders.Controls.Add(_lvSecondaryOffenders);
-        grpOffenders.Controls.Add(pnlActions);
+        _grpMultiMonitorOffenders.Controls.Add(_lvSecondaryOffenders);
+        _grpMultiMonitorOffenders.Controls.Add(pnlActions);
 
-        tab.Controls.Add(grpOffenders);
-        tab.Controls.Add(grpVRR);
+        _tabMultiMonitor.Controls.Add(_grpMultiMonitorOffenders);
+        _tabMultiMonitor.Controls.Add(grpVRR);
 
-        _tabControl.TabPages.Add(tab);
+        _tabControl.TabPages.Add(_tabMultiMonitor);
     }
 
     private void RefreshMultiMonitorTab()
@@ -1017,13 +1071,13 @@ public class MainForm : Form
     #region Tab 7: Retro Shell & Themes
     private void BuildRetroShellTab()
     {
-        var tab = new TabPage("Retro Shell & Themes")
+        _tabRetroShell = new TabPage("Retro Shell & Themes")
         {
             BackColor = RetroTheme.BackgroundColor,
             Padding = new Padding(8)
         };
 
-        var grpThemes = new GroupBox
+        _grpRetroThemes = new GroupBox
         {
             Text = "Classic Windows Visual Theme Presets",
             Dock = DockStyle.Top,
@@ -1079,10 +1133,10 @@ public class MainForm : Form
         };
         pnlThemeActions.Controls.Add(_btnApplyTheme);
 
-        grpThemes.Controls.Add(_lvThemes);
-        grpThemes.Controls.Add(pnlThemeActions);
+        _grpRetroThemes.Controls.Add(_lvThemes);
+        _grpRetroThemes.Controls.Add(pnlThemeActions);
 
-        var grpGuide = new GroupBox
+        _grpRetroGuide = new GroupBox
         {
             Text = "Safe Retro Shell Ecosystem Guide",
             Dock = DockStyle.Fill,
@@ -1105,12 +1159,12 @@ public class MainForm : Form
                    "3. ExplorerPatcher (ADVERTENCIA - HIGH RISK):\n" +
                    "   No recomendado. Inyecta dxgi.dll en explorer.exe y suele provocar bloqueos de arranque con cada actualización acumulativa mensual de Windows 11."
         };
-        grpGuide.Controls.Add(_txtShellGuide);
+        _grpRetroGuide.Controls.Add(_txtShellGuide);
 
-        tab.Controls.Add(grpGuide);
-        tab.Controls.Add(grpThemes);
+        _tabRetroShell.Controls.Add(_grpRetroGuide);
+        _tabRetroShell.Controls.Add(_grpRetroThemes);
 
-        _tabControl.TabPages.Add(tab);
+        _tabControl.TabPages.Add(_tabRetroShell);
     }
     #endregion
 
@@ -1171,9 +1225,10 @@ public class MainForm : Form
 
     private void ShowProcessDatabaseDialog()
     {
+        var loc = LocalizationManager.Instance;
         using var dlg = new Form
         {
-            Text = "Process & Service Safety Database",
+            Text = loc.CurrentLanguage == AppLanguage.Spanish ? "Base de Datos de Seguridad de Procesos" : "Process & Service Safety Database",
             Width = 750,
             Height = 480,
             StartPosition = FormStartPosition.CenterParent,
@@ -1190,11 +1245,11 @@ public class MainForm : Form
             Font = RetroTheme.DefaultFont,
             BorderStyle = BorderStyle.Fixed3D
         };
-        lv.Columns.Add("Process", 110);
-        lv.Columns.Add("Classification", 110);
-        lv.Columns.Add("Category", 110);
-        lv.Columns.Add("Vendor", 90);
-        lv.Columns.Add("Technical Impact & Safety Details", 280);
+        lv.Columns.Add(loc.T("Col_Process"), 110);
+        lv.Columns.Add(loc.T("Col_Classification"), 110);
+        lv.Columns.Add(loc.T("Col_Category"), 110);
+        lv.Columns.Add(loc.T("Col_Vendor"), 90);
+        lv.Columns.Add(loc.T("Col_ImpactSafety"), 280);
         ListViewColumnSorter.Attach(lv);
 
         foreach (var entry in _backgroundDatabase.GetAllEntries())
@@ -1355,9 +1410,10 @@ public class MainForm : Form
 
     private void UpdateStatusLabels()
     {
-        _statusProfile.Text = $"Profile: {_profileEngine.CurrentProfile.ToString().ToUpper()}";
+        var loc = LocalizationManager.Instance;
+        _statusProfile.Text = $"{loc.T("Status_ProfilePrefix")}{_profileEngine.CurrentProfile.ToString().ToUpper()}";
         bool hasSnap = _snapshotManager.HasActiveSnapshot();
-        _statusSnapshot.Text = hasSnap ? "Snapshot: ACTIVE" : "Snapshot: None";
+        _statusSnapshot.Text = hasSnap ? loc.T("Status_SnapshotActive") : loc.T("Status_SnapshotNone");
 
         if (_profileEngine.CurrentProfile == ProfileType.LowInterference)
             _rbLowInterference.Checked = true;
@@ -1365,6 +1421,148 @@ public class MainForm : Form
             _rbMaxResponse.Checked = true;
         else
             _rbNormal.Checked = true;
+    }
+
+    private void ApplyLocalization()
+    {
+        var loc = LocalizationManager.Instance;
+        Text = loc.T("App_Title");
+
+        // Menus
+        _menuFile.Text = loc.T("Menu_File");
+        _menuRefreshAll.Text = loc.T("Menu_RefreshAll");
+        _menuExportBenchmark.Text = loc.T("Menu_ExportBenchmark");
+        _menuExportProfiles.Text = loc.T("Menu_ExportProfiles");
+        _menuExit.Text = loc.T("Menu_Exit");
+
+        _menuProfiles.Text = loc.T("Menu_Profiles");
+        _menuProfileNormal.Text = loc.T("Menu_Normal");
+        _menuProfileLow.Text = loc.T("Menu_LowInterference");
+        _menuProfileMax.Text = loc.T("Menu_MaxResponse");
+        _menuRestoreNormal.Text = loc.T("Menu_RestoreNormal");
+
+        _menuDiagnostics.Text = loc.T("Menu_Diagnostics");
+        _menuWhyBusy.Text = loc.T("Menu_WhyBusy");
+        _menuProcessDb.Text = loc.T("Menu_ProcessDb");
+
+        _menuLanguage.Text = loc.T("Menu_Language");
+        _menuLangEnglish.Text = loc.T("Menu_LangEnglish");
+        _menuLangSpanish.Text = loc.T("Menu_LangSpanish");
+        _menuLangEnglish.Checked = loc.CurrentLanguage == AppLanguage.English;
+        _menuLangSpanish.Checked = loc.CurrentLanguage == AppLanguage.Spanish;
+
+        _menuHelp.Text = loc.T("Menu_Help");
+        _menuAbout.Text = loc.T("Menu_About");
+
+        // Tabs
+        _tabTopology.Text = loc.T("Tab_Topology");
+        _tabProfiles.Text = loc.T("Tab_Profiles");
+        _tabBackground.Text = loc.T("Tab_Background");
+        _tabBenchmark.Text = loc.T("Tab_Benchmark");
+        _tabDiagnostics.Text = loc.T("Tab_Diagnostics");
+        _tabMultiMonitor.Text = loc.T("Tab_MultiMonitor");
+        _tabRetroShell.Text = loc.T("Tab_RetroShell");
+
+        // GroupBoxes & labels
+        _grpTopologyDisplays.Text = loc.T("Topology_DisplaysGrp");
+        _grpTopologyHardware.Text = loc.T("Topology_HardwareGrp");
+        _grpTopologyVisual.Text = loc.T("Topology_VisualGrp");
+        _btnRefreshTopology.Text = loc.T("Topology_RefreshBtn");
+
+        _grpProfilesSelector.Text = loc.T("Profiles_SelectorGrp");
+        _rbNormal.Text = loc.T("Profiles_Normal_Desc");
+        _rbLowInterference.Text = loc.T("Profiles_Low_Desc");
+        _rbMaxResponse.Text = loc.T("Profiles_Max_Desc");
+        _btnApplyProfile.Text = loc.T("Profiles_ApplyBtn");
+        _btnRestoreNormal.Text = loc.T("Profiles_RestoreBtn");
+        _grpProfilesLog.Text = loc.T("Profiles_LogGrp");
+
+        _lblBackgroundInfo.Text = loc.T("Background_Info");
+        _btnPauseApp.Text = loc.T("Background_PauseBtn");
+        _btnBackgroundPriority.Text = loc.T("Background_PriorityBtn");
+        _btnResumeApp.Text = loc.T("Background_ResumeBtn");
+        _btnRefreshApps.Text = loc.T("Background_RefreshBtn");
+
+        _grpBenchmarkHeader.Text = loc.T("Benchmark_HeaderGrp");
+        _lblBenchmarkNotice.Text = loc.T("Benchmark_Notice");
+        _btnRunBenchmark.Text = loc.T("Benchmark_RunBtn");
+        _btnRunAdvancedBenchmark.Text = loc.T("Benchmark_TrilateralBtn");
+        _btnExportBenchmark.Text = loc.T("Benchmark_ExportBtn");
+        _grpBenchmarkVerdict.Text = loc.T("Benchmark_VerdictGrp");
+
+        _grpDiagnosticWhy.Text = loc.T("Diag_WhyGrp");
+        _btnRunDiagnostic.Text = loc.T("Diag_RunBtn");
+        _grpSmartProfiles.Text = loc.T("Diag_SmartGrp");
+        _lblGameMode.Text = loc.T("Diag_ModeLbl");
+        _rbAutoGame.Text = loc.T("Diag_ModeAuto");
+        _rbManualGame.Text = loc.T("Diag_ModeManual");
+        _rbDisabledGame.Text = loc.T("Diag_ModeDisabled");
+        _btnApplySmartProfile.Text = loc.T("Diag_ApplySmartBtn");
+
+        _grpMultiMonitorOffenders.Text = loc.T("MultiMonitor_OffendersGrp");
+        _btnAnalyzeMonitors.Text = loc.T("MultiMonitor_AnalyzeBtn");
+        _btnBlankSecondary.Text = loc.T("MultiMonitor_BlankBtn");
+
+        _grpRetroThemes.Text = loc.T("RetroShell_ThemesGrp");
+        _btnApplyTheme.Text = loc.T("RetroShell_ApplyBtn");
+        _grpRetroGuide.Text = loc.T("RetroShell_GuideGrp");
+        _txtShellGuide.Text = loc.T("RetroShell_GuideText");
+
+        // Columns
+        SetColumnTitle(_lvDisplays, 0, "Col_Monitor");
+        SetColumnTitle(_lvDisplays, 1, "Col_Resolution");
+        SetColumnTitle(_lvDisplays, 2, "Col_RefreshRate");
+        SetColumnTitle(_lvDisplays, 3, "Col_Depth");
+        SetColumnTitle(_lvDisplays, 4, "Col_Primary");
+
+        SetColumnTitle(_lvApps, 0, "Col_Application");
+        SetColumnTitle(_lvApps, 1, "Col_Process");
+        SetColumnTitle(_lvApps, 2, "Col_State");
+        SetColumnTitle(_lvApps, 3, "Col_Protection");
+        SetColumnTitle(_lvApps, 4, "Col_Details");
+
+        SetColumnTitle(_lvBenchmarkResults, 0, "Col_Metric");
+        SetColumnTitle(_lvBenchmarkResults, 1, "Col_Before");
+        SetColumnTitle(_lvBenchmarkResults, 2, "Col_After");
+        SetColumnTitle(_lvBenchmarkResults, 3, "Col_Delta");
+        SetColumnTitle(_lvBenchmarkResults, 4, "Col_Evaluation");
+
+        SetColumnTitle(_lvDiagnosticFindings, 0, "Col_Category");
+        SetColumnTitle(_lvDiagnosticFindings, 1, "Col_Component");
+        SetColumnTitle(_lvDiagnosticFindings, 2, "Col_Explanation");
+        SetColumnTitle(_lvDiagnosticFindings, 3, "Col_Action");
+
+        SetColumnTitle(_lvSmartProfiles, 0, "Col_ProfileName");
+        SetColumnTitle(_lvSmartProfiles, 1, "Col_TriggerProcess");
+        SetColumnTitle(_lvSmartProfiles, 2, "Col_Description");
+        SetColumnTitle(_lvSmartProfiles, 3, "Col_CpuIsolation");
+
+        SetColumnTitle(_lvSecondaryOffenders, 0, "Col_WindowTitle");
+        SetColumnTitle(_lvSecondaryOffenders, 1, "Col_Impact");
+
+        SetColumnTitle(_lvThemes, 0, "Col_ThemeName");
+        SetColumnTitle(_lvThemes, 1, "Col_Description");
+        SetColumnTitle(_lvThemes, 2, "Col_Preset");
+
+        UpdateStatusLabels();
+    }
+
+    private void SetColumnTitle(ListView lv, int colIndex, string key)
+    {
+        if (lv != null && lv.Columns.Count > colIndex)
+        {
+            string localized = LocalizationManager.Instance.T(key);
+            var col = lv.Columns[colIndex];
+            col.Tag = localized;
+            if (lv.ListViewItemSorter is ListViewColumnSorter sorter && sorter.SortColumn == colIndex && sorter.Order != SortOrder.None)
+            {
+                col.Text = sorter.Order == SortOrder.Ascending ? $"{localized} ▲" : $"{localized} ▼";
+            }
+            else
+            {
+                col.Text = localized;
+            }
+        }
     }
 
     private async Task ApplyProfile(ProfileType profile)
