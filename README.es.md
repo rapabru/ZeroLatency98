@@ -112,7 +112,7 @@ La aplicación incluye un motor de telemetría de rendimiento basado en la API n
 ## 🚀 Inicio Rápido y Compilación
 
 ### Ejecución Directa
-1. Descarga el archivo zip desde [Releases](https://github.com/rapabru/theme-98/releases/latest).
+1. Descarga el archivo zip desde [Releases](https://github.com/rapabru/ZeroLatency98/releases/latest).
 2. Extrae el contenido en cualquier carpeta.
 3. Ejecuta `ZeroLatency98.exe`.
 

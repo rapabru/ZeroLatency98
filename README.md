@@ -156,7 +156,7 @@ Rather than making unverified claims, the application includes a built-in benchm
 ## 🚀 Quick Start & Building from Source
 
 ### Running Prebuilt Binaries
-1. Grab the latest release package from the [Releases page](https://github.com/rapabru/theme-98/releases/latest).
+1. Grab the latest release package from the [Releases page](https://github.com/rapabru/ZeroLatency98/releases/latest).
 2. Extract the ZIP archive anywhere on your system.
 3. Launch `ZeroLatency98.exe`.
 4. Select your preferred profile or configure the Background Manager.
