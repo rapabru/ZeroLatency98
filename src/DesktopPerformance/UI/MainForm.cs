@@ -501,16 +501,17 @@ public class MainForm : Form
         var pnlButtons = new Panel
         {
             Dock = DockStyle.Top,
-            Height = 44,
+            Height = 46,
             Padding = new Padding(0, 6, 0, 6)
         };
 
         _btnApplyProfile = new RetroButton
         {
-            Text = "[ APPLY SELECTED PROFILE ]",
+            Text = "Apply Selected Profile",
             Location = new Point(4, 6),
-            Size = new Size(220, 32),
-            Font = RetroTheme.BoldFont
+            Size = new Size(220, 34),
+            Font = RetroTheme.BoldFont,
+            IsPrimary = true
         };
         _btnApplyProfile.Click += async (s, e) =>
         {
@@ -521,11 +522,11 @@ public class MainForm : Form
 
         _btnRestoreNormal = new RetroButton
         {
-            Text = "[ RESTORE TO NORMAL (UNDO ALL) ]",
-            Location = new Point(236, 6),
-            Size = new Size(270, 32),
+            Text = "Restore to Normal (Undo All)",
+            Location = new Point(234, 6),
+            Size = new Size(250, 34),
             Font = RetroTheme.BoldFont,
-            ForeColor = Color.DarkRed
+            ForeColor = RetroTheme.Black
         };
         _btnRestoreNormal.Click += async (s, e) => await RestoreToNormal();
 
@@ -702,16 +703,17 @@ public class MainForm : Form
 
         _btnRunBenchmark = new RetroButton
         {
-            Text = "[ RUN BENCHMARK ]",
+            Text = "Run Benchmark",
             Location = new Point(440, 26),
             Size = new Size(140, 44),
-            Font = RetroTheme.BoldFont
+            Font = RetroTheme.BoldFont,
+            IsPrimary = true
         };
         _btnRunBenchmark.Click += async (s, e) => await RunBenchmarkAsync();
 
         _btnRunAdvancedBenchmark = new RetroButton
         {
-            Text = "[ TRILATERAL TEST ]",
+            Text = "Trilateral Test",
             Location = new Point(586, 26),
             Size = new Size(140, 44),
             Font = RetroTheme.BoldFont
@@ -808,10 +810,11 @@ public class MainForm : Form
 
         _btnRunDiagnostic = new RetroButton
         {
-            Text = "[ Run Interference Diagnostic ]",
+            Text = "Run Interference Diagnostic",
             Location = new Point(4, 4),
-            Size = new Size(220, 28),
-            Font = RetroTheme.BoldFont
+            Size = new Size(230, 28),
+            Font = RetroTheme.BoldFont,
+            IsPrimary = true
         };
         _btnRunDiagnostic.Click += (s, e) => RunDesktopDiagnostic();
         pnlDiagTop.Controls.Add(_btnRunDiagnostic);
@@ -1178,10 +1181,11 @@ public class MainForm : Form
 
         _btnApplyTheme = new RetroButton
         {
-            Text = "[ Apply Classic Theme to System ]",
+            Text = "Apply Classic Theme to System",
             Location = new Point(4, 4),
             Size = new Size(250, 28),
-            Font = RetroTheme.BoldFont
+            Font = RetroTheme.BoldFont,
+            IsPrimary = true
         };
         _btnApplyTheme.Click += (s, e) =>
         {
@@ -1202,7 +1206,7 @@ public class MainForm : Form
 
         _btnRestoreTheme = new RetroButton
         {
-            Text = "[ Restore Windows 11 Default Theme ]",
+            Text = "Restore Windows 11 Default Theme",
             Location = new Point(260, 4),
             Size = new Size(260, 28),
             Font = RetroTheme.BoldFont

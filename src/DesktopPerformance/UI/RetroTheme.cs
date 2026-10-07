@@ -15,6 +15,9 @@ public static class RetroTheme
     public static readonly Color TitleGradientEnd = Color.FromArgb(16, 132, 208); // Cyan-Blue #1084D0
     public static readonly Color TitleTextColor = Color.FromArgb(255, 255, 255);
 
+    public static readonly Color ButtonHoverColor = Color.FromArgb(222, 222, 222);
+    public static readonly Color ButtonPressedColor = Color.FromArgb(176, 176, 176);
+
     public static Font DefaultFont { get; }
     public static Font BoldFont { get; }
     public static Font TitleFont { get; }
@@ -22,14 +25,8 @@ public static class RetroTheme
 
     static RetroTheme()
     {
-        // Try Tahoma or MS Sans Serif
-        string fontName = "Tahoma";
-        using (var testFont = new Font("MS Sans Serif", 8.25f))
-        {
-            if (testFont.Name == "MS Sans Serif")
-                fontName = "MS Sans Serif";
-        }
-
+        // Standard Windows 98/2000 system typography
+        const string fontName = "Tahoma";
         DefaultFont = new Font(fontName, 8.25f, FontStyle.Regular);
         BoldFont = new Font(fontName, 8.25f, FontStyle.Bold);
         TitleFont = new Font(fontName, 9.0f, FontStyle.Bold);
@@ -38,40 +35,12 @@ public static class RetroTheme
 
     public static void Draw3DRaisedBorder(Graphics g, Rectangle rect)
     {
-        using var penWhite = new Pen(HighlightLight);
-        using var penDark = new Pen(DarkShadow);
-        using var penBlack = new Pen(Black);
-
-        // Top and Left outer
-        g.DrawLine(penWhite, rect.Left, rect.Top, rect.Right - 1, rect.Top);
-        g.DrawLine(penWhite, rect.Left, rect.Top, rect.Left, rect.Bottom - 1);
-
-        // Bottom and Right outer
-        g.DrawLine(penBlack, rect.Left, rect.Bottom - 1, rect.Right - 1, rect.Bottom - 1);
-        g.DrawLine(penBlack, rect.Right - 1, rect.Top, rect.Right - 1, rect.Bottom - 1);
-
-        // Bottom and Right inner
-        g.DrawLine(penDark, rect.Left + 1, rect.Bottom - 2, rect.Right - 2, rect.Bottom - 2);
-        g.DrawLine(penDark, rect.Right - 2, rect.Top + 1, rect.Right - 2, rect.Bottom - 2);
+        ControlPaint.DrawBorder3D(g, rect, Border3DStyle.Raised);
     }
 
     public static void Draw3DSunkenBorder(Graphics g, Rectangle rect)
     {
-        using var penWhite = new Pen(HighlightLight);
-        using var penDark = new Pen(DarkShadow);
-        using var penBlack = new Pen(Black);
-
-        // Top and Left outer
-        g.DrawLine(penDark, rect.Left, rect.Top, rect.Right - 1, rect.Top);
-        g.DrawLine(penDark, rect.Left, rect.Top, rect.Left, rect.Bottom - 1);
-
-        // Top and Left inner
-        g.DrawLine(penBlack, rect.Left + 1, rect.Top + 1, rect.Right - 2, rect.Top + 1);
-        g.DrawLine(penBlack, rect.Left + 1, rect.Top + 1, rect.Left + 1, rect.Bottom - 2);
-
-        // Bottom and Right outer
-        g.DrawLine(penWhite, rect.Left, rect.Bottom - 1, rect.Right - 1, rect.Bottom - 1);
-        g.DrawLine(penWhite, rect.Right - 1, rect.Top, rect.Right - 1, rect.Bottom - 1);
+        ControlPaint.DrawBorder3D(g, rect, Border3DStyle.Sunken);
     }
 
     public static void DrawTitleBar(Graphics g, Rectangle rect, string title)

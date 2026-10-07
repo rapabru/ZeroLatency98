@@ -146,8 +146,8 @@ public class LocalizationManager
             ["Profiles_Normal_Desc"] = "NORMAL - Baseline (Windows 11 default, zero modifications)",
             ["Profiles_Low_Desc"] = "LOW INTERFERENCE - Safe Visual & I/O Reduction (Transparency OFF, Anim OFF, Search Pause, OneDrive Pause)",
             ["Profiles_Max_Desc"] = "MAX RESPONSE - Low Interference + Background CPU Isolation & Priority Demotion",
-            ["Profiles_ApplyBtn"] = "[ APPLY SELECTED PROFILE ]",
-            ["Profiles_RestoreBtn"] = "[ RESTORE TO NORMAL (UNDO ALL) ]",
+            ["Profiles_ApplyBtn"] = "Apply Selected Profile",
+            ["Profiles_RestoreBtn"] = "Restore to Normal (Undo All)",
             ["Profiles_LogGrp"] = "Execution & Snapshot Journal",
 
             // Tab 3: Background Manager
@@ -160,8 +160,8 @@ public class LocalizationManager
             // Tab 4: Benchmark
             ["Benchmark_HeaderGrp"] = "Performance Data Helper (PDH) Measurement Engine",
             ["Benchmark_Notice"] = "Principle: 'Measurement before claims. Never fabricate improvements.'\nThis module samples system noise before and after profile activation. If difference is below 2.0%,\nit honestly reports: 'No measurable improvement detected'.",
-            ["Benchmark_RunBtn"] = "[ RUN BENCHMARK ]",
-            ["Benchmark_TrilateralBtn"] = "[ TRILATERAL TEST ]",
+            ["Benchmark_RunBtn"] = "Run Benchmark",
+            ["Benchmark_TrilateralBtn"] = "Trilateral Test",
             ["Benchmark_ExportBtn"] = "Export JSON",
             ["Benchmark_StatusIdle"] = "Status: Benchmark idle.",
             ["Benchmark_VerdictGrp"] = "Telemetry Verdict",
@@ -169,7 +169,7 @@ public class LocalizationManager
 
             // Tab 5: Diagnostics
             ["Diag_WhyGrp"] = "Diagnostic: Why Is My Desktop Busy?",
-            ["Diag_RunBtn"] = "[ Run Interference Diagnostic ]",
+            ["Diag_RunBtn"] = "Run Interference Diagnostic",
             ["Diag_SmartGrp"] = "Smart Profiles & Auto Game Detection",
             ["Diag_ModeLbl"] = "Game Detection Mode:",
             ["Diag_ModeAuto"] = "AUTO (Auto-apply on launch, auto-restore on exit)",
@@ -184,8 +184,8 @@ public class LocalizationManager
 
             // Tab 7: Retro Shell & Classic Theme (Phase 5)
             ["RetroShell_ThemesGrp"] = "System-Wide Classic Windows 95/98 Themes (Low Load)",
-            ["RetroShell_ApplyBtn"] = "[ Apply Classic Theme to System ]",
-            ["RetroShell_RestoreBtn"] = "[ Restore Windows 11 Default Theme ]",
+            ["RetroShell_ApplyBtn"] = "Apply Classic Theme to System",
+            ["RetroShell_RestoreBtn"] = "Restore Windows 11 Default Theme",
             ["RetroShell_Notice"] = "Applies native .theme file, SetSysColors palette, solid teal desktop, and shuts down DWM blur shaders for maximum system responsiveness.",
             ["RetroShell_StatusTitle"] = "System Theme Status:",
             ["RetroShell_StatusClassic"] = "ACTIVE: Classic Theme (Zero-Overhead)",
@@ -292,8 +292,8 @@ public class LocalizationManager
             ["Profiles_Normal_Desc"] = "NORMAL - Línea Base (predeterminado de Windows 11, cero modificaciones)",
             ["Profiles_Low_Desc"] = "BAJA INTERFERENCIA - Reducción Segura Visual y E/S (Transparencia OFF, Anim OFF, Pausa Search y OneDrive)",
             ["Profiles_Max_Desc"] = "MÁXIMA RESPUESTA - Baja Interferencia + Aislamiento CPU y Prioridad de Fondo",
-            ["Profiles_ApplyBtn"] = "[ APLICAR PERFIL SELECCIONADO ]",
-            ["Profiles_RestoreBtn"] = "[ RESTAURAR A NORMAL (DESHACER TODO) ]",
+            ["Profiles_ApplyBtn"] = "Aplicar Perfil Seleccionado",
+            ["Profiles_RestoreBtn"] = "Restaurar a Normal (Deshacer Todo)",
             ["Profiles_LogGrp"] = "Registro de Ejecución y Snapshots",
 
             // Tab 3: Background Manager
@@ -306,8 +306,8 @@ public class LocalizationManager
             // Tab 4: Benchmark
             ["Benchmark_HeaderGrp"] = "Motor de Medición Performance Data Helper (PDH)",
             ["Benchmark_Notice"] = "Principio: 'Medición antes que afirmaciones. No inventar mejoras.'\nEste módulo toma muestras antes y después de aplicar el perfil. Si la diferencia es menor al 2.0%,\nse reportará honestamente: 'No measurable improvement detected'.",
-            ["Benchmark_RunBtn"] = "[ EJECUTAR BENCHMARK ]",
-            ["Benchmark_TrilateralBtn"] = "[ PRUEBA TRILATERAL ]",
+            ["Benchmark_RunBtn"] = "Ejecutar Benchmark",
+            ["Benchmark_TrilateralBtn"] = "Prueba Trilateral",
             ["Benchmark_ExportBtn"] = "Exportar JSON",
             ["Benchmark_StatusIdle"] = "Estado: Benchmark inactivo.",
             ["Benchmark_VerdictGrp"] = "Veredicto de Telemetría",
@@ -315,23 +315,23 @@ public class LocalizationManager
 
             // Tab 5: Diagnostics
             ["Diag_WhyGrp"] = "Diagnóstico: ¿Por Qué Mi Desktop Está Ocupado?",
-            ["Diag_RunBtn"] = "[ Ejecutar Diagnóstico de Interferencia ]",
+            ["Diag_RunBtn"] = "Ejecutar Diagnóstico de Interferencia",
             ["Diag_SmartGrp"] = "Perfiles Inteligentes y Detección Automática de Juegos",
             ["Diag_ModeLbl"] = "Modo de Detección de Juegos:",
             ["Diag_ModeAuto"] = "AUTO (Auto-aplicar al iniciar, auto-restaurar al salir)",
             ["Diag_ModeManual"] = "MANUAL (Sólo avisar)",
             ["Diag_ModeDisabled"] = "DESACTIVADO",
-            ["Diag_ApplySmartBtn"] = "Aplicar Perfil Inteligente Seleccionado",
+            ["Diag_ApplySmartBtn"] = "Aplicar Perfil Inteligente",
 
             // Tab 6: Multi-Monitor
             ["MultiMonitor_OffendersGrp"] = "Aplicaciones Problemáticas en Pantallas Secundarias",
-            ["MultiMonitor_AnalyzeBtn"] = "Analizar Desincronización Multi-Pantalla",
+            ["MultiMonitor_AnalyzeBtn"] = "Analizar Desincronización",
             ["MultiMonitor_BlankBtn"] = "Fondo Estático en Pantallas Secundarias",
 
             // Tab 7: Retro Shell & Classic Theme (Fase 5)
             ["RetroShell_ThemesGrp"] = "Temas Clásicos de Windows 95/98 para el Sistema (Baja Carga)",
-            ["RetroShell_ApplyBtn"] = "[ Aplicar Tema Clásico al Sistema ]",
-            ["RetroShell_RestoreBtn"] = "[ Restaurar Tema Original de Windows 11 ]",
+            ["RetroShell_ApplyBtn"] = "Aplicar Tema Clásico al Sistema",
+            ["RetroShell_RestoreBtn"] = "Restaurar Tema Original de Windows 11",
             ["RetroShell_Notice"] = "Aplica archivo .theme nativo, paleta SetSysColors, fondo verde azulado sólido y apaga shaders de desenfoque de DWM para máxima respuesta del sistema.",
             ["RetroShell_StatusTitle"] = "Estado del Tema del Sistema:",
             ["RetroShell_StatusClassic"] = "ACTIVO: Tema Clásico (Cero Sobrecarga)",
