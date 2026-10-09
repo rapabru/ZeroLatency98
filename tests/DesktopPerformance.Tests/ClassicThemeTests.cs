@@ -83,4 +83,11 @@ public class ClassicThemeTests
         Assert.Equal("Open-Shell", openShell.Name);
         Assert.StartsWith("https://github.com/Open-Shell/Open-Shell-Menu", openShell.DownloadUrl);
     }
+
+    [Fact]
+    public void StopCompanionTool_HandlesNonExistentProcessGracefully()
+    {
+        bool stopped = _manager.StopCompanionTool("NonExistentTool_XYZ");
+        Assert.False(stopped);
+    }
 }

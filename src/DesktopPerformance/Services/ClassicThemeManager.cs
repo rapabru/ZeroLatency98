@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.IO.Compression;
+using System.Net.Http;
 using System.Text;
 using Microsoft.Win32;
 using DesktopPerformance.Native;
@@ -424,6 +426,7 @@ public class ClassicThemeManager
 
         string[] possiblePaths = new[]
         {
+            Path.Combine(appData, "DesktopPerformance98", "RetroBar", "RetroBar.exe"),
             Path.Combine(appData, "Programs", "RetroBar", "RetroBar.exe"),
             Path.Combine(progFiles, "RetroBar", "RetroBar.exe"),
             Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "RetroBar", "RetroBar.exe")
@@ -482,5 +485,142 @@ public class ClassicThemeManager
         }
         catch { }
         return false;
+    }
+
+    public bool StopCompanionTool(string toolName)
+    {
+        bool stopped = false;
+        string procName = toolName.Equals("Open-Shell", StringComparison.OrdinalIgnoreCase) ? "StartMenu" : toolName;
+        foreach (var p in Process.GetProcessesByName(procName))
+        {
+            try
+            {
+                p.Kill();
+                p.WaitForExit(2000);
+                stopped = true;
+            }
+            catch { }
+        }
+        return stopped;
+    }
+
+    public async Task<(bool Success, string Message)> DownloadAndInstallRetroBarAsync(IProgress<int>? progress = null, Action<string>? statusCallback = null)
+    {
+        try
+        {
+            statusCallback?.Invoke("Conectando con GitHub Releases para obtener RetroBar...");
+            string downloadUrl = "https://github.com/dremin/RetroBar/releases/latest/download/RetroBar.Portable.zip";
+
+            string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string targetDir = Path.Combine(appData, "DesktopPerformance98", "RetroBar");
+            string tempZip = Path.Combine(appData, "DesktopPerformance98", "RetroBar_temp.zip");
+
+            Directory.CreateDirectory(Path.GetDirectoryName(tempZip)!);
+
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("ZeroLatency98-CompanionDownloader");
+                using var response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
+                response.EnsureSuccessStatusCode();
+
+                var totalBytes = response.Content.Headers.ContentLength ?? 17_600_000L;
+                using var contentStream = await response.Content.ReadAsStreamAsync();
+                using var fileStream = new FileStream(tempZip, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true);
+
+                byte[] buffer = new byte[81920];
+                long totalRead = 0;
+                int bytesRead;
+
+                while ((bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                {
+                    await fileStream.WriteAsync(buffer, 0, bytesRead);
+                    totalRead += bytesRead;
+                    int percent = (int)((totalRead * 100) / totalBytes);
+                    progress?.Report(percent);
+                    statusCallback?.Invoke($"Descargando RetroBar Portable... {percent}% ({totalRead / (1024.0 * 1024.0):F1} MB)");
+                }
+            }
+
+            statusCallback?.Invoke("Extrayendo archivos de RetroBar...");
+
+            // If RetroBar was already running, stop it before extracting
+            StopCompanionTool("RetroBar");
+
+            if (Directory.Exists(targetDir))
+            {
+                try { Directory.Delete(targetDir, true); } catch { }
+            }
+            Directory.CreateDirectory(targetDir);
+
+            ZipFile.ExtractToDirectory(tempZip, targetDir, overwriteFiles: true);
+
+            try { File.Delete(tempZip); } catch { }
+
+            string exePath = Path.Combine(targetDir, "RetroBar.exe");
+            if (File.Exists(exePath))
+            {
+                statusCallback?.Invoke("¡RetroBar integrado exitosamente!");
+                return (true, exePath);
+            }
+
+            return (false, "No se encontró el ejecutable RetroBar.exe en el paquete descargado.");
+        }
+        catch (Exception ex)
+        {
+            statusCallback?.Invoke($"Error al descargar/integrar RetroBar: {ex.Message}");
+            return (false, ex.Message);
+        }
+    }
+
+    public async Task<(bool Success, string Message)> DownloadOpenShellInstallerAsync(IProgress<int>? progress = null, Action<string>? statusCallback = null)
+    {
+        try
+        {
+            statusCallback?.Invoke("Conectando con GitHub Releases para instalador de Open-Shell...");
+            string downloadUrl = "https://github.com/Open-Shell/Open-Shell-Menu/releases/download/v4.4.198/OpenShellSetup_4_4_198.exe";
+
+            string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string installerPath = Path.Combine(appData, "DesktopPerformance98", "OpenShellSetup.exe");
+
+            Directory.CreateDirectory(Path.GetDirectoryName(installerPath)!);
+
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("ZeroLatency98-CompanionDownloader");
+                using var response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
+                response.EnsureSuccessStatusCode();
+
+                var totalBytes = response.Content.Headers.ContentLength ?? 10_000_000L;
+                using var contentStream = await response.Content.ReadAsStreamAsync();
+                using var fileStream = new FileStream(installerPath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true);
+
+                byte[] buffer = new byte[81920];
+                long totalRead = 0;
+                int bytesRead;
+
+                while ((bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                {
+                    await fileStream.WriteAsync(buffer, 0, bytesRead);
+                    totalRead += bytesRead;
+                    int percent = (int)((totalRead * 100) / totalBytes);
+                    progress?.Report(percent);
+                    statusCallback?.Invoke($"Descargando OpenShellSetup.exe... {percent}% ({totalRead / (1024.0 * 1024.0):F1} MB)");
+                }
+            }
+
+            statusCallback?.Invoke("Iniciando instalador oficial de Open-Shell...");
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = installerPath,
+                UseShellExecute = true
+            });
+
+            return (true, installerPath);
+        }
+        catch (Exception ex)
+        {
+            statusCallback?.Invoke($"Error al descargar instalador de Open-Shell: {ex.Message}");
+            return (false, ex.Message);
+        }
     }
 }

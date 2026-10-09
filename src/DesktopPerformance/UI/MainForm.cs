@@ -133,6 +133,7 @@ public class MainForm : Form
     private GroupBox _grpCompanion = null!;
     private ListView _lvCompanionTools = null!;
     private RetroButton _btnLaunchCompanion = null!;
+    private RetroButton _btnOpenFolderCompanion = null!;
     private RetroButton _btnGetCompanion = null!;
     private GroupBox _grpRetroGuide = null!;
     private TextBox _txtShellGuide = null!;
@@ -1258,47 +1259,194 @@ public class MainForm : Form
 
         _btnLaunchCompanion = new RetroButton
         {
-            Text = "Launch Selected Tool",
+            Text = "▶ Iniciar RetroBar",
             Location = new Point(4, 4),
-            Size = new Size(180, 28)
+            Size = new Size(230, 28),
+            Font = RetroTheme.BoldFont,
+            IsPrimary = true
         };
-        _btnLaunchCompanion.Click += (s, e) =>
+        _btnLaunchCompanion.Click += async (s, e) =>
         {
-            if (_lvCompanionTools.SelectedItems.Count > 0 && _lvCompanionTools.SelectedItems[0].Tag is CompanionToolInfo tool)
+            CompanionToolInfo? tool = null;
+            if (_lvCompanionTools.SelectedItems.Count > 0 && _lvCompanionTools.SelectedItems[0].Tag is CompanionToolInfo t)
             {
-                if (tool.IsInstalled)
+                tool = t;
+            }
+            else if (_lvCompanionTools.Items.Count > 0 && _lvCompanionTools.Items[0].Tag is CompanionToolInfo defaultTool)
+            {
+                tool = defaultTool;
+            }
+
+            if (tool == null) return;
+
+            if (tool.IsRunning)
+            {
+                _classicThemeManager.StopCompanionTool(tool.Name);
+                AppendLog($"[COMPANION] {tool.Name} detenido.");
+                await Task.Delay(400);
+                RefreshCompanionTools();
+                return;
+            }
+
+            if (tool.IsInstalled)
+            {
+                if (_classicThemeManager.LaunchCompanionTool(tool.ExecutablePath))
                 {
-                    _classicThemeManager.LaunchCompanionTool(tool.ExecutablePath);
-                    AppendLog($"[COMPANION] Launched {tool.Name}");
-                    RefreshCompanionTools();
+                    AppendLog($"[COMPANION] {tool.Name} iniciado exitosamente.");
+                }
+                await Task.Delay(600);
+                RefreshCompanionTools();
+                return;
+            }
+
+            // Not installed: download & integrate!
+            if (tool.Name == "RetroBar")
+            {
+                _btnLaunchCompanion.Enabled = false;
+                _btnLaunchCompanion.Text = "Descargando... (0%)";
+                AppendLog("[COMPANION] Descargando e integrando RetroBar Portable desde GitHub oficial...");
+
+                var progress = new Progress<int>(percent =>
+                {
+                    if (InvokeRequired)
+                    {
+                        Invoke(() => _btnLaunchCompanion.Text = $"Descargando... ({percent}%)");
+                    }
+                    else
+                    {
+                        _btnLaunchCompanion.Text = $"Descargando... ({percent}%)";
+                    }
+                });
+
+                var (success, resultMsg) = await _classicThemeManager.DownloadAndInstallRetroBarAsync(progress, msg =>
+                {
+                    if (InvokeRequired) Invoke(() => AppendLog($"[COMPANION] {msg}"));
+                    else AppendLog($"[COMPANION] {msg}");
+                });
+
+                RefreshCompanionTools();
+
+                if (success)
+                {
+                    var answer = MessageBox.Show(
+                        "¡RetroBar Portable se ha descargado e integrado con éxito!\n\n¿Deseas iniciar RetroBar ahora mismo para activar la barra clásica de Windows 95/98?",
+                        "RetroBar Integrado",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Information);
+
+                    if (answer == DialogResult.Yes)
+                    {
+                        _classicThemeManager.LaunchCompanionTool(resultMsg);
+                        AppendLog("[COMPANION] RetroBar iniciado.");
+                        await Task.Delay(600);
+                        RefreshCompanionTools();
+                    }
                 }
                 else
                 {
-                    MessageBox.Show($"{tool.Name} is not detected on this system. Click 'Get Tool (GitHub)' to download it.", tool.Name, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show($"No se pudo descargar RetroBar automáticamente:\n{resultMsg}\n\nPuedes descargarlo manualmente haciendo clic en 'Ver en GitHub'.", "Error de Descarga", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            else if (tool.Name == "Open-Shell")
+            {
+                _btnLaunchCompanion.Enabled = false;
+                _btnLaunchCompanion.Text = "Descargando...";
+                AppendLog("[COMPANION] Descargando instalador oficial de Open-Shell...");
+
+                var progress = new Progress<int>(percent =>
+                {
+                    if (InvokeRequired) Invoke(() => _btnLaunchCompanion.Text = $"Descargando... ({percent}%)");
+                    else _btnLaunchCompanion.Text = $"Descargando... ({percent}%)";
+                });
+
+                var (success, resultMsg) = await _classicThemeManager.DownloadOpenShellInstallerAsync(progress, msg =>
+                {
+                    if (InvokeRequired) Invoke(() => AppendLog($"[COMPANION] {msg}"));
+                    else AppendLog($"[COMPANION] {msg}");
+                });
+
+                RefreshCompanionTools();
+
+                if (!success)
+                {
+                    MessageBox.Show($"No se pudo descargar el instalador de Open-Shell:\n{resultMsg}", "Error de Descarga", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+        };
+
+        _btnOpenFolderCompanion = new RetroButton
+        {
+            Text = "Abrir Carpeta",
+            Location = new Point(240, 4),
+            Size = new Size(130, 28)
+        };
+        _btnOpenFolderCompanion.Click += (s, e) =>
+        {
+            CompanionToolInfo? tool = null;
+            if (_lvCompanionTools.SelectedItems.Count > 0 && _lvCompanionTools.SelectedItems[0].Tag is CompanionToolInfo t)
+                tool = t;
+            else if (_lvCompanionTools.Items.Count > 0 && _lvCompanionTools.Items[0].Tag is CompanionToolInfo defaultTool)
+                tool = defaultTool;
+
+            if (tool != null && !string.IsNullOrEmpty(tool.ExecutablePath) && File.Exists(tool.ExecutablePath))
+            {
+                string dir = Path.GetDirectoryName(tool.ExecutablePath)!;
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "explorer.exe",
+                    Arguments = $"\"{dir}\"",
+                    UseShellExecute = true
+                });
+            }
+            else
+            {
+                string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                string dir = Path.Combine(appData, "DesktopPerformance98", "RetroBar");
+                if (!Directory.Exists(dir))
+                {
+                    dir = Path.Combine(appData, "DesktopPerformance98");
+                }
+                if (Directory.Exists(dir))
+                {
+                    Process.Start(new ProcessStartInfo { FileName = "explorer.exe", Arguments = $"\"{dir}\"", UseShellExecute = true });
                 }
             }
         };
 
         _btnGetCompanion = new RetroButton
         {
-            Text = "Get Tool (GitHub)",
-            Location = new Point(190, 4),
-            Size = new Size(160, 28)
+            Text = "Ver en GitHub",
+            Location = new Point(376, 4),
+            Size = new Size(140, 28)
         };
         _btnGetCompanion.Click += (s, e) =>
         {
-            if (_lvCompanionTools.SelectedItems.Count > 0 && _lvCompanionTools.SelectedItems[0].Tag is CompanionToolInfo tool)
+            CompanionToolInfo? tool = null;
+            if (_lvCompanionTools.SelectedItems.Count > 0 && _lvCompanionTools.SelectedItems[0].Tag is CompanionToolInfo t)
+                tool = t;
+            else if (_lvCompanionTools.Items.Count > 0 && _lvCompanionTools.Items[0].Tag is CompanionToolInfo defaultTool)
+                tool = defaultTool;
+
+            if (tool != null && !string.IsNullOrEmpty(tool.DownloadUrl))
             {
                 try
                 {
                     Process.Start(new ProcessStartInfo { FileName = tool.DownloadUrl, UseShellExecute = true });
+                    AppendLog($"[COMPANION] Abriendo página web de {tool.Name}: {tool.DownloadUrl}");
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    AppendLog($"[COMPANION] Error al abrir enlace en navegador: {ex.Message}");
+                }
             }
         };
 
         pnlCompanionActions.Controls.Add(_btnLaunchCompanion);
+        pnlCompanionActions.Controls.Add(_btnOpenFolderCompanion);
         pnlCompanionActions.Controls.Add(_btnGetCompanion);
+
+        _lvCompanionTools.SelectedIndexChanged += (s, e) => UpdateCompanionActionButtons();
+        _lvCompanionTools.DoubleClick += (s, e) => _btnLaunchCompanion.PerformClick();
 
         _grpCompanion.Controls.Add(_lvCompanionTools);
         _grpCompanion.Controls.Add(pnlCompanionActions);
@@ -1334,6 +1482,54 @@ public class MainForm : Form
         UpdateThemeStatusLabel();
     }
 
+    private void UpdateCompanionActionButtons()
+    {
+        var loc = LocalizationManager.Instance;
+        CompanionToolInfo? tool = null;
+        if (_lvCompanionTools.SelectedItems.Count > 0 && _lvCompanionTools.SelectedItems[0].Tag is CompanionToolInfo t)
+        {
+            tool = t;
+        }
+        else if (_lvCompanionTools.Items.Count > 0 && _lvCompanionTools.Items[0].Tag is CompanionToolInfo defaultTool)
+        {
+            tool = defaultTool;
+        }
+
+        if (tool == null)
+        {
+            _btnLaunchCompanion.Enabled = false;
+            _btnOpenFolderCompanion.Enabled = false;
+            _btnGetCompanion.Enabled = false;
+            return;
+        }
+
+        _btnGetCompanion.Enabled = true;
+        _btnGetCompanion.Text = loc.T("RetroShell_ViewGitHub");
+        _btnOpenFolderCompanion.Text = loc.T("RetroShell_OpenFolder");
+
+        if (tool.IsRunning)
+        {
+            _btnLaunchCompanion.Text = tool.Name == "RetroBar" ? loc.T("RetroShell_StopRetroBar") : loc.T("RetroShell_StopOpenShell");
+            _btnLaunchCompanion.Enabled = true;
+            _btnLaunchCompanion.IsPrimary = false;
+            _btnOpenFolderCompanion.Enabled = !string.IsNullOrEmpty(tool.ExecutablePath);
+        }
+        else if (tool.IsInstalled)
+        {
+            _btnLaunchCompanion.Text = tool.Name == "RetroBar" ? loc.T("RetroShell_LaunchRetroBar") : loc.T("RetroShell_LaunchOpenShell");
+            _btnLaunchCompanion.Enabled = true;
+            _btnLaunchCompanion.IsPrimary = true;
+            _btnOpenFolderCompanion.Enabled = !string.IsNullOrEmpty(tool.ExecutablePath);
+        }
+        else
+        {
+            _btnLaunchCompanion.Text = tool.Name == "RetroBar" ? loc.T("RetroShell_DownloadRetroBar") : loc.T("RetroShell_DownloadOpenShell");
+            _btnLaunchCompanion.Enabled = true;
+            _btnLaunchCompanion.IsPrimary = true;
+            _btnOpenFolderCompanion.Enabled = false;
+        }
+    }
+
     private void RefreshCompanionTools()
     {
         _lvCompanionTools.BeginUpdate();
@@ -1355,7 +1551,13 @@ public class MainForm : Form
         itemOs.ForeColor = os.IsRunning ? Color.DarkGreen : (os.IsInstalled ? Color.DarkBlue : Color.Gray);
         _lvCompanionTools.Items.Add(itemOs);
 
+        if (_lvCompanionTools.Items.Count > 0 && _lvCompanionTools.SelectedItems.Count == 0)
+        {
+            _lvCompanionTools.Items[0].Selected = true;
+        }
+
         _lvCompanionTools.EndUpdate();
+        UpdateCompanionActionButtons();
     }
 
     private void UpdateThemeStatusLabel()
@@ -1716,8 +1918,7 @@ public class MainForm : Form
         _btnApplyTheme.Text = loc.T("RetroShell_ApplyBtn");
         _btnRestoreTheme.Text = loc.T("RetroShell_RestoreBtn");
         _grpCompanion.Text = loc.T("RetroShell_CompanionGrp");
-        _btnLaunchCompanion.Text = loc.T("RetroShell_LaunchRetroBar");
-        _btnGetCompanion.Text = loc.T("RetroShell_GetRetroBar");
+        UpdateCompanionActionButtons();
         _grpRetroGuide.Text = loc.T("RetroShell_GuideGrp");
         _txtShellGuide.Text = loc.T("RetroShell_GuideText");
 
