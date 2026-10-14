@@ -64,19 +64,69 @@ public class MultiMonitorOptimizer
         }
 
         // Identify secondary monitor potential offenders
-        var activeProcesses = Process.GetProcesses();
-        var knownOffenders = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "chrome", "msedge", "Discord", "Spotify", "steamwebhelper" };
-
-        foreach (var p in activeProcesses)
+        if (Screen.AllScreens.Length > 1)
         {
-            if (knownOffenders.Contains(p.ProcessName) && p.MainWindowHandle != IntPtr.Zero)
+            var activeProcesses = Process.GetProcesses();
+            var knownOffenders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
-                analysis.SecondaryMonitorRunningApps.Add($"{p.ProcessName} (Window: {p.MainWindowTitle})");
+                "chrome", "msedge", "firefox", "brave", "opera",
+                "Discord", "Spotify", "steamwebhelper", "obs64", "vlc"
+            };
+
+            foreach (var p in activeProcesses)
+            {
+                try
+                {
+                    if (p.MainWindowHandle != IntPtr.Zero && !string.IsNullOrWhiteSpace(p.MainWindowTitle))
+                    {
+                        var screen = Screen.FromHandle(p.MainWindowHandle);
+                        if (!screen.Primary && knownOffenders.Contains(p.ProcessName))
+                        {
+                            analysis.SecondaryMonitorRunningApps.Add($"{p.ProcessName} (Window: {p.MainWindowTitle}) [{screen.DeviceName}]");
+                        }
+                    }
+                }
+                catch { }
+                finally
+                {
+                    p.Dispose();
+                }
             }
-            p.Dispose();
         }
 
         return analysis;
+    }
+
+    public int MinimizeSecondaryWindows()
+    {
+        if (Screen.AllScreens.Length <= 1)
+            return 0;
+
+        int count = 0;
+        var activeProcesses = Process.GetProcesses();
+        foreach (var p in activeProcesses)
+        {
+            try
+            {
+                if (p.MainWindowHandle != IntPtr.Zero && !string.IsNullOrWhiteSpace(p.MainWindowTitle))
+                {
+                    var screen = Screen.FromHandle(p.MainWindowHandle);
+                    if (!screen.Primary)
+                    {
+                        Win32Native.ShowWindow(p.MainWindowHandle, Win32Native.SW_MINIMIZE);
+                        count++;
+                    }
+                }
+            }
+            catch { }
+            finally
+            {
+                p.Dispose();
+            }
+        }
+
+        ApplySecondaryDisplayStaticBackground(true);
+        return count;
     }
 
     public void ApplySecondaryDisplayStaticBackground(bool apply)

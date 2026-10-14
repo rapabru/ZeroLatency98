@@ -39,26 +39,11 @@ public class HardwareInspector
             status.AvailablePhysicalMemoryMB = memStatus.ullAvailPhys / (1024 * 1024);
         }
 
-        // 3. GPU Adapter Name
-        try
-        {
-            using var videoKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000");
-            if (videoKey != null)
-            {
-                var desc = videoKey.GetValue("DriverDesc") as string;
-                if (!string.IsNullOrWhiteSpace(desc))
-                {
-                    status.GpuAdapterName = desc.Trim();
-                }
-            }
-        }
-        catch
-        {
-            status.GpuAdapterName = "Default Graphics Adapter";
-        }
-
-        // 4. Displays & Monitors via Win32 EnumDisplayDevices / Settings
+        // 3. Displays & Monitors via Win32 EnumDisplayDevices / Settings
         status.Displays = DetectDisplays();
+
+        // 4. GPU Adapter Name
+        status.GpuAdapterName = DetectGpuAdapter(status.Displays);
 
         // 5. Total Process and Thread Counts
         try
@@ -141,5 +126,53 @@ public class HardwareInspector
         }
 
         return list;
+    }
+
+    private string DetectGpuAdapter(List<DisplayInfo> displays)
+    {
+        var primaryDisplay = displays.FirstOrDefault(d => d.IsPrimary);
+        if (primaryDisplay != null && !string.IsNullOrWhiteSpace(primaryDisplay.MonitorName) &&
+            !primaryDisplay.MonitorName.StartsWith("Display", StringComparison.OrdinalIgnoreCase) &&
+            !primaryDisplay.MonitorName.Equals("Primary Display", StringComparison.OrdinalIgnoreCase))
+        {
+            // Primary display device string contains the active adapter name (e.g. "AMD Radeon RX 6700 XT")
+            return primaryDisplay.MonitorName;
+        }
+
+        try
+        {
+            using var classKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}");
+            if (classKey != null)
+            {
+                var candidates = new List<string>();
+                foreach (var subKeyName in classKey.GetSubKeyNames())
+                {
+                    if (subKeyName.Length == 4 && int.TryParse(subKeyName, out _))
+                    {
+                        using var subKey = classKey.OpenSubKey(subKeyName);
+                        if (subKey?.GetValue("DriverDesc") is string desc && !string.IsNullOrWhiteSpace(desc))
+                        {
+                            candidates.Add(desc.Trim());
+                        }
+                    }
+                }
+
+                // Filter out virtual/software display adapters
+                var realGpu = candidates.FirstOrDefault(c =>
+                    !c.Contains("Duet", StringComparison.OrdinalIgnoreCase) &&
+                    !c.Contains("Virtual", StringComparison.OrdinalIgnoreCase) &&
+                    !c.Contains("Citrix", StringComparison.OrdinalIgnoreCase) &&
+                    !c.Contains("Remote", StringComparison.OrdinalIgnoreCase));
+
+                if (!string.IsNullOrWhiteSpace(realGpu))
+                    return realGpu;
+
+                if (candidates.Count > 0)
+                    return candidates[0];
+            }
+        }
+        catch { }
+
+        return "Default Graphics Adapter";
     }
 }

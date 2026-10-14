@@ -79,13 +79,33 @@ public class AdvancedBenchmarkEngine
             advanced.CurrentTimerResolutionMs = 1.0;
         }
 
-        // Calculate synthetic P1 / P0.1 jitter estimation based on context switches per core
-        int cores = Math.Max(1, Environment.ProcessorCount);
-        double csPerCore = advanced.ContextSwitchesPerSecond / cores;
-        // P1 jitter estimation formula based on queue wait time
-        advanced.EstimatedP1JitterMs = Math.Round((csPerCore / 1000.0) * 0.12, 2);
-        advanced.EstimatedP01JitterMs = Math.Round(advanced.EstimatedP1JitterMs * 1.85, 2);
+        // Empirical Thread Scheduling Jitter Measurement:
+        // Samples real thread wakeups using high-precision Stopwatch (Stopwatch.Frequency)
+        // against 1ms target to measure empirical timer resolution overshoot and queue latency.
+        var (avgJitter, p99Jitter) = MeasureEmpiricalThreadJitter(5);
+        advanced.EstimatedP1JitterMs = avgJitter;
+        advanced.EstimatedP01JitterMs = p99Jitter;
 
         return advanced;
+    }
+
+    public static (double AvgJitterMs, double P99JitterMs) MeasureEmpiricalThreadJitter(int sampleCount = 5)
+    {
+        var samples = new List<double>(sampleCount);
+        for (int i = 0; i < sampleCount; i++)
+        {
+            var sw = Stopwatch.StartNew();
+            Thread.Sleep(1);
+            sw.Stop();
+            double elapsedMs = (double)sw.ElapsedTicks / Stopwatch.Frequency * 1000.0;
+            // Target was 1.0ms; any time above 1.0ms is scheduling jitter/overshoot
+            double jitter = Math.Max(0, elapsedMs - 1.0);
+            samples.Add(jitter);
+        }
+
+        samples.Sort();
+        double avg = Math.Round(samples.Average(), 2);
+        double p99 = Math.Round(samples.Last(), 2);
+        return (avg, p99);
     }
 }

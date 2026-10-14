@@ -176,6 +176,19 @@ public static class Win32Native
     [DllImport("user32.dll", CharSet = CharSet.Ansi)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool EnumDisplaySettingsExA(string? lpszDeviceName, int iModeNum, ref DEVMODEA lpDevMode, uint dwFlags);
+
+    public const int SW_HIDE = 0;
+    public const int SW_SHOWNORMAL = 1;
+    public const int SW_SHOWMINIMIZED = 2;
+    public const int SW_MAXIMIZE = 3;
+    public const int SW_SHOWNOACTIVATE = 4;
+    public const int SW_SHOW = 5;
+    public const int SW_MINIMIZE = 6;
+    public const int SW_RESTORE = 9;
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
     #endregion
 
     #region Kernel32

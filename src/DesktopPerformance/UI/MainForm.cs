@@ -1170,8 +1170,9 @@ public class MainForm : Form
         };
         _btnBlankSecondary.Click += (s, e) =>
         {
-            _multiMonitorOptimizer.ApplySecondaryDisplayStaticBackground(true);
-            AppendLog("[MULTI-MONITOR] Forced static desktop pattern to eliminate DirectComposition secondary repaints.");
+            int minimized = _multiMonitorOptimizer.MinimizeSecondaryWindows();
+            AppendLog($"[MULTI-MONITOR] Minimized {minimized} window(s) on secondary displays & forced static desktop pattern to eliminate DirectComposition repaints.");
+            RefreshMultiMonitorTab();
         };
 
         pnlActions.Controls.AddRange(new Control[] { _btnAnalyzeMonitors, _btnBlankSecondary });

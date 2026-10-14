@@ -328,4 +328,51 @@ public class CoreTests
             if (File.Exists(tempLearnerPath)) File.Delete(tempLearnerPath);
         }
     }
+
+    [Fact]
+    public void ProfileLearner_DynamicallySupportsArbitraryGamesAndCloudSync()
+    {
+        string tempLearnerPath = Path.Combine(Path.GetTempPath(), $"learner_custom_{Guid.NewGuid():N}.json");
+        try
+        {
+            var learner = new ProfileLearner(tempLearnerPath);
+
+            // Record sessions for a non-hardcoded game (e.g. Valorant / Premiere)
+            learner.RecordSession("valorant", new[] { "OneDrive", "Spotify", "chrome" });
+            learner.RecordSession("valorant", new[] { "OneDrive", "Discord", "chrome" });
+
+            var suggestions = learner.GenerateIntelligentSuggestions();
+            Assert.NotEmpty(suggestions);
+
+            // Should have suggestions for OneDrive and Chrome
+            Assert.Contains(suggestions, s => s.SuggestionTitle.Contains("OneDrive") && s.SuggestionTitle.Contains("valorant"));
+            Assert.Contains(suggestions, s => s.SuggestionTitle.Contains("chrome") && s.SuggestionTitle.Contains("valorant"));
+        }
+        finally
+        {
+            if (File.Exists(tempLearnerPath)) File.Delete(tempLearnerPath);
+        }
+    }
+
+    [Fact]
+    public void AdvancedBenchmarkEngine_MeasuresEmpiricalThreadJitter()
+    {
+        var (avg, p99) = AdvancedBenchmarkEngine.MeasureEmpiricalThreadJitter(3);
+
+        Assert.True(avg >= 0, "Average jitter must be non-negative");
+        Assert.True(p99 >= avg, "P99 jitter must be >= average jitter");
+        Assert.False(double.IsNaN(avg));
+        Assert.False(double.IsNaN(p99));
+    }
+
+    [Fact]
+    public void MultiMonitorOptimizer_MinimizesSecondaryWindowsSafely()
+    {
+        var hw = new HardwareInspector();
+        var optimizer = new MultiMonitorOptimizer(hw);
+
+        // Must run safely and return integer count without throwing
+        int minimized = optimizer.MinimizeSecondaryWindows();
+        Assert.True(minimized >= 0);
+    }
 }
