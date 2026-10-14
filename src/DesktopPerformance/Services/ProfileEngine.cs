@@ -9,18 +9,23 @@ public class ProfileEngine
     private readonly ServiceSupervisor _services;
     private readonly ProcessSupervisor _processes;
     private readonly SnapshotManager _snapshotManager;
+    private readonly TimerResolutionService _timerResolution;
 
     public ProfileEngine(
         VisualEffectsManager visualEffects,
         ServiceSupervisor services,
         ProcessSupervisor processes,
-        SnapshotManager snapshotManager)
+        SnapshotManager snapshotManager,
+        TimerResolutionService? timerResolution = null)
     {
         _visualEffects = visualEffects;
         _services = services;
         _processes = processes;
         _snapshotManager = snapshotManager;
+        _timerResolution = timerResolution ?? new TimerResolutionService();
     }
+
+    public TimerResolutionService TimerResolution => _timerResolution;
 
     public ProfileType CurrentProfile { get; private set; } = ProfileType.Normal;
 
@@ -155,6 +160,18 @@ public class ProfileEngine
             }
         }
 
+        // STEP 5: Windows NT Timer Resolution Optimization
+        if (targetProfile == ProfileType.MaxResponse)
+        {
+            _timerResolution.SetMaximumResolution(out double actualMs);
+            log.Add($"[TIMER] Set Windows NT timer resolution to maximum precision ({actualMs:F3} ms - Zero Jitter).");
+        }
+        else if (targetProfile == ProfileType.LowInterference)
+        {
+            _timerResolution.SetResolution(1.0, out double actualMs);
+            log.Add($"[TIMER] Set Windows NT timer resolution to 1.0 ms ({actualMs:F3} ms).");
+        }
+
         CurrentProfile = targetProfile;
         log.Add($"[SUCCESS] Profile '{targetProfile}' applied successfully.");
         return (true, log);
@@ -221,7 +238,11 @@ public class ProfileEngine
         }
         log.Add("[PROCESS] Restored normal priority and CPU affinity for all background processes.");
 
-        // 4. Clear Snapshot
+        // 4. Restore Windows Timer Resolution
+        _timerResolution.RestoreDefault(out double restoredMs);
+        log.Add($"[TIMER] Restored Windows timer resolution to system default ({restoredMs:F3} ms).");
+
+        // 5. Clear Snapshot
         _snapshotManager.ClearSnapshot();
         CurrentProfile = ProfileType.Normal;
         log.Add("[SUCCESS] System fully restored to Normal baseline.");

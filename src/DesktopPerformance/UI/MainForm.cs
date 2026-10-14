@@ -66,7 +66,7 @@ public class MainForm : Form
     private Label _lblVisualDetails = null!;
     private RetroButton _btnRefreshTopology = null!;
 
-    // Tab 2: Profiles
+    // Tab 2: Profiles & Timer Resolution
     private TabPage _tabProfiles = null!;
     private GroupBox _grpProfilesSelector = null!;
     private GroupBox _grpProfilesLog = null!;
@@ -76,6 +76,13 @@ public class MainForm : Form
     private RetroButton _btnApplyProfile = null!;
     private RetroButton _btnRestoreNormal = null!;
     private TextBox _txtLog = null!;
+    private GroupBox _grpTimerResolution = null!;
+    private Label _lblTimerNotice = null!;
+    private Label _lblTimerCurrent = null!;
+    private Label _lblTimerStatus = null!;
+    private RetroButton _btnSetTimerMax = null!;
+    private RetroButton _btnSetTimer1ms = null!;
+    private RetroButton _btnRestoreTimer = null!;
 
     // Tab 3: Background Manager
     private TabPage _tabBackground = null!;
@@ -142,6 +149,7 @@ public class MainForm : Form
     private StatusStrip _statusStrip = null!;
     private ToolStripStatusLabel _statusLabel = null!;
     private ToolStripStatusLabel _statusProfile = null!;
+    private ToolStripStatusLabel _statusTimer = null!;
     private ToolStripStatusLabel _statusSnapshot = null!;
 
     public MainForm()
@@ -168,6 +176,22 @@ public class MainForm : Form
         LocalizationManager.Instance.OnLanguageChanged += ApplyLocalization;
         ApplyLocalization();
         _profileEngine.Initialize();
+
+        _profileEngine.TimerResolution.OnResolutionChanged += (info) =>
+        {
+            if (InvokeRequired)
+            {
+                Invoke(UpdateTimerResolutionUi);
+                return;
+            }
+            UpdateTimerResolutionUi();
+        };
+
+        FormClosing += (s, e) =>
+        {
+            _profileEngine.TimerResolution.Dispose();
+        };
+
         SetupProcessWatcher();
         RefreshAllData();
     }
@@ -355,10 +379,11 @@ public class MainForm : Form
         };
 
         _statusLabel = new ToolStripStatusLabel("Ready") { Spring = true, TextAlign = ContentAlignment.MiddleLeft, BorderSides = ToolStripStatusLabelBorderSides.All, BorderStyle = Border3DStyle.Sunken };
-        _statusProfile = new ToolStripStatusLabel("Profile: NORMAL") { Width = 160, BorderSides = ToolStripStatusLabelBorderSides.All, BorderStyle = Border3DStyle.Sunken };
-        _statusSnapshot = new ToolStripStatusLabel("Snapshot: None") { Width = 180, BorderSides = ToolStripStatusLabelBorderSides.All, BorderStyle = Border3DStyle.Sunken };
+        _statusProfile = new ToolStripStatusLabel("Profile: NORMAL") { Width = 150, BorderSides = ToolStripStatusLabelBorderSides.All, BorderStyle = Border3DStyle.Sunken };
+        _statusTimer = new ToolStripStatusLabel("Timer: 15.625 ms") { Width = 140, BorderSides = ToolStripStatusLabelBorderSides.All, BorderStyle = Border3DStyle.Sunken };
+        _statusSnapshot = new ToolStripStatusLabel("Snapshot: None") { Width = 160, BorderSides = ToolStripStatusLabelBorderSides.All, BorderStyle = Border3DStyle.Sunken };
 
-        _statusStrip.Items.AddRange(new ToolStripItem[] { _statusLabel, _statusProfile, _statusSnapshot });
+        _statusStrip.Items.AddRange(new ToolStripItem[] { _statusLabel, _statusProfile, _statusTimer, _statusSnapshot });
 
         // Add controls in order
         Controls.Add(_tabControl);
@@ -533,6 +558,95 @@ public class MainForm : Form
 
         pnlButtons.Controls.AddRange(new Control[] { _btnApplyProfile, _btnRestoreNormal });
 
+        // Timer Resolution GroupBox
+        _grpTimerResolution = new GroupBox
+        {
+            Text = "Windows NT Kernel Timer Resolution (Global Precision)",
+            Dock = DockStyle.Top,
+            Height = 100,
+            Font = RetroTheme.BoldFont
+        };
+
+        _lblTimerNotice = new Label
+        {
+            Text = "Sets system-wide clock interrupt resolution. 0.5 ms eliminates thread wait jitter and micro-stutter in games.",
+            Location = new Point(16, 22),
+            Size = new Size(740, 18),
+            Font = RetroTheme.DefaultFont,
+            ForeColor = Color.FromArgb(60, 60, 60)
+        };
+
+        _lblTimerCurrent = new Label
+        {
+            Text = "Current Resolution: 15.625 ms | Max HW: 0.500 ms | Min: 15.625 ms",
+            Location = new Point(16, 44),
+            Size = new Size(410, 20),
+            Font = RetroTheme.BoldFont,
+            ForeColor = Color.DarkBlue
+        };
+
+        _lblTimerStatus = new Label
+        {
+            Text = "Status: Default Windows Scheduling",
+            Location = new Point(16, 68),
+            Size = new Size(410, 20),
+            Font = RetroTheme.DefaultFont,
+            ForeColor = Color.FromArgb(40, 40, 40)
+        };
+
+        _btnSetTimerMax = new RetroButton
+        {
+            Text = "0.5 ms (Max)",
+            Location = new Point(440, 48),
+            Size = new Size(115, 32),
+            Font = RetroTheme.BoldFont,
+            IsPrimary = true
+        };
+        _btnSetTimerMax.Click += (s, e) =>
+        {
+            bool ok = _profileEngine.TimerResolution.SetMaximumResolution(out double actual);
+            AppendLog(ok
+                ? $"[TIMER] Kernel timer resolution set to MAXIMUM precision: {actual:F3} ms."
+                : $"[TIMER] Failed to set maximum resolution. Actual: {actual:F3} ms.");
+            UpdateTimerResolutionUi();
+        };
+
+        _btnSetTimer1ms = new RetroButton
+        {
+            Text = "1.0 ms",
+            Location = new Point(565, 48),
+            Size = new Size(100, 32),
+            Font = RetroTheme.BoldFont
+        };
+        _btnSetTimer1ms.Click += (s, e) =>
+        {
+            bool ok = _profileEngine.TimerResolution.SetResolution(1.0, out double actual);
+            AppendLog(ok
+                ? $"[TIMER] Kernel timer resolution set to 1.0 ms precision: {actual:F3} ms."
+                : $"[TIMER] Failed to set 1.0 ms resolution. Actual: {actual:F3} ms.");
+            UpdateTimerResolutionUi();
+        };
+
+        _btnRestoreTimer = new RetroButton
+        {
+            Text = "Default (~15.6 ms)",
+            Location = new Point(675, 48),
+            Size = new Size(140, 32),
+            Font = RetroTheme.BoldFont
+        };
+        _btnRestoreTimer.Click += (s, e) =>
+        {
+            bool ok = _profileEngine.TimerResolution.RestoreDefault(out double actual);
+            AppendLog($"[TIMER] Kernel timer resolution restored to default: {actual:F3} ms.");
+            UpdateTimerResolutionUi();
+        };
+
+        _grpTimerResolution.Controls.AddRange(new Control[]
+        {
+            _lblTimerNotice, _lblTimerCurrent, _lblTimerStatus,
+            _btnSetTimerMax, _btnSetTimer1ms, _btnRestoreTimer
+        });
+
         _grpProfilesLog = new GroupBox
         {
             Text = "Execution & Snapshot Journal",
@@ -555,6 +669,7 @@ public class MainForm : Form
 
         _tabProfiles.Controls.Add(_grpProfilesLog);
         _tabProfiles.Controls.Add(pnlButtons);
+        _tabProfiles.Controls.Add(_grpTimerResolution);
         _tabProfiles.Controls.Add(_grpProfilesSelector);
 
         _tabControl.TabPages.Add(_tabProfiles);
@@ -1784,8 +1899,9 @@ public class MainForm : Form
             // Multi-monitor tab
             RefreshMultiMonitorTab();
 
-            // Status bar
+            // Status bar & Timer resolution
             UpdateStatusLabels();
+            UpdateTimerResolutionUi();
         }
         catch (Exception ex)
         {
@@ -1841,6 +1957,38 @@ public class MainForm : Form
             _rbNormal.Checked = true;
     }
 
+    private void UpdateTimerResolutionUi()
+    {
+        try
+        {
+            var loc = LocalizationManager.Instance;
+            var res = _profileEngine.TimerResolution.QueryCurrentResolution();
+
+            _lblTimerCurrent.Text = $"{loc.T("Timer_CurrentLbl")} {res.CurrentResolutionMs:F3} ms | " +
+                                    $"{loc.T("Timer_MaxLbl")} {res.MaxResolutionMs:F3} ms | " +
+                                    $"{loc.T("Timer_MinLbl")} {res.MinResolutionMs:F3} ms";
+
+            if (res.IsCustomActive || res.CurrentResolutionMs <= 1.05)
+            {
+                _lblTimerStatus.Text = $"{loc.T("Timer_StatusActive")} ({res.CurrentResolutionMs:F3} ms)";
+                _lblTimerStatus.ForeColor = Color.DarkGreen;
+                _statusTimer.Text = $"Timer: {res.CurrentResolutionMs:F3} ms (TIGHT)";
+                _statusTimer.ForeColor = Color.DarkGreen;
+            }
+            else
+            {
+                _lblTimerStatus.Text = loc.T("Timer_StatusDefault");
+                _lblTimerStatus.ForeColor = Color.FromArgb(60, 60, 60);
+                _statusTimer.Text = $"Timer: {res.CurrentResolutionMs:F3} ms (DEF)";
+                _statusTimer.ForeColor = Color.Black;
+            }
+        }
+        catch
+        {
+            // Ignore UI update errors if disposed or uninitialized
+        }
+    }
+
     private void ApplyLocalization()
     {
         var loc = LocalizationManager.Instance;
@@ -1894,6 +2042,13 @@ public class MainForm : Form
         _btnApplyProfile.Text = loc.T("Profiles_ApplyBtn");
         _btnRestoreNormal.Text = loc.T("Profiles_RestoreBtn");
         _grpProfilesLog.Text = loc.T("Profiles_LogGrp");
+
+        _grpTimerResolution.Text = loc.T("Timer_Group");
+        _lblTimerNotice.Text = loc.T("Timer_Notice");
+        _btnSetTimerMax.Text = loc.T("Timer_SetMaxBtn");
+        _btnSetTimer1ms.Text = loc.T("Timer_Set1msBtn");
+        _btnRestoreTimer.Text = loc.T("Timer_RestoreBtn");
+        UpdateTimerResolutionUi();
 
         _lblBackgroundInfo.Text = loc.T("Background_Info");
         _btnPauseApp.Text = loc.T("Background_PauseBtn");

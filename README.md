@@ -4,7 +4,7 @@
 
 [![GitHub Release](https://img.shields.io/github/v/release/rapabru/ZeroLatency98)](https://github.com/rapabru/ZeroLatency98/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-27%2F27%20Passing-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-51%2F51%20Passing-brightgreen.svg)]()
 [![Platform: Windows 11](https://img.shields.io/badge/Platform-Windows%2011%20x64-blue.svg)]()
 [![Language: English & Spanish](https://img.shields.io/badge/Language-English%20%7C%20Espa%C3%B1ol-informational.svg)]()
 
@@ -36,7 +36,7 @@ Monitor and manage secondary applications (Discord, Chrome, Steam, Spotify, OneD
 | Module | Interface Preview | Technical Purpose |
 |---|---|---|
 | **1. System Topology & Monitors** | ![Topology Preview](docs/screenshots/tab_en_0_system_topology.png) | Inspect displays, resolutions, refresh rates (Hz), DPI scaling, and active DWM hardware composition state. |
-| **2. Profiles & Optimization** | ![Profiles Preview](docs/screenshots/tab_en_1_profiles_optimization.png) | Instant switching between *Normal*, *Low-Interference*, and *Maximum Responsiveness* profiles with transactional JSON rollback snapshots. |
+| **2. Profiles & Optimization** | ![Profiles Preview](docs/screenshots/tab_en_1_profiles_optimization.png) | Instant switching between *Normal*, *Low-Interference*, and *Maximum Responsiveness* profiles, featuring NT Kernel Timer Resolution control (0.5 ms / 1.0 ms precision) and transactional JSON rollback snapshots. |
 | **3. Background Manager** | ![Background Preview](docs/screenshots/tab_en_2_background_manager.png) | Granular process supervision with `NtSuspendProcess` pausing and `PROCESS_MODE_BACKGROUND_BEGIN` Eco priority scheduling. |
 | **4. Verification & Benchmark** | ![Benchmark Preview](docs/screenshots/tab_en_3_verification_benchmark.png) | Automated Trilateral Benchmark (Baseline vs Optimized vs Delta) using native Windows PDH telemetry counters. |
 | **5. Diagnostics & Smart Profiles** | ![Diagnostics Preview](docs/screenshots/tab_en_4_diagnostics_smart_profiles.png) | *"Why is system busy?"* deep analysis, signature database, and background game watcher for automatic profile engagement. |

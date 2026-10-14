@@ -4,7 +4,7 @@
 
 [![GitHub Release](https://img.shields.io/github/v/release/rapabru/ZeroLatency98)](https://github.com/rapabru/ZeroLatency98/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-27%2F27%20Passing-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-51%2F51%20Passing-brightgreen.svg)]()
 [![Platform: Windows 11](https://img.shields.io/badge/Platform-Windows%2011%20x64-blue.svg)]()
 
 🌐 **[Read this documentation in English (README.md)](README.md)**
@@ -35,7 +35,7 @@ La interfaz permite pausar, reanudar y asignar prioridad de fondo a procesos pes
 | Pestaña | Captura de Pantalla | Descripción |
 |---|---|---|
 | **1. Topología del Sistema** | ![Topología](docs/screenshots/tab_es_0_system_topology.png) | Inspección de monitores, resolución, tasa de refresco (Hz), DPI y estado de composición DWM. |
-| **2. Perfiles y Optimización** | ![Perfiles](docs/screenshots/tab_es_1_profiles_optimization.png) | Conmutación instantánea entre perfiles *Normal*, *Baja Interferencia* y *Máxima Respuesta*. |
+| **2. Perfiles y Optimización** | ![Perfiles](docs/screenshots/tab_es_1_profiles_optimization.png) | Conmutación instantánea entre perfiles *Normal*, *Baja Interferencia* y *Máxima Respuesta*, con control activo de Resolución de Temporizador NT (precisión de 0.5 ms / 1.0 ms) y snapshots transaccionales JSON. |
 | **3. Administrador de Fondo** | ![Administrador](docs/screenshots/tab_es_2_background_manager.png) | Control granular de aplicaciones secundarias (Chrome, Discord, Steam, Spotify, OneDrive). |
 | **4. Verificación y Benchmark** | ![Benchmark](docs/screenshots/tab_es_3_verification_benchmark.png) | Medición Trilateral automatizada (Antes vs Después vs Delta) con contadores de rendimiento PDH. |
 | **5. Diagnósticos y Perfiles Inteligentes** | ![Diagnósticos](docs/screenshots/tab_es_4_diagnostics_smart_profiles.png) | Detección de procesos intrusivos ("¿Por qué está ocupado el sistema?") y auto-activación por juegos. |

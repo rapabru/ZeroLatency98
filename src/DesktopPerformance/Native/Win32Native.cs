@@ -215,5 +215,16 @@ public static class Win32Native
 
     [DllImport("ntdll.dll", SetLastError = true)]
     public static extern int NtQueryTimerResolution(out uint MinimumResolution, out uint MaximumResolution, out uint CurrentResolution);
+
+    [DllImport("ntdll.dll", SetLastError = true)]
+    public static extern int NtSetTimerResolution(uint DesiredResolution, bool SetResolution, out uint CurrentResolution);
+    #endregion
+
+    #region Winmm
+    [DllImport("winmm.dll", EntryPoint = "timeBeginPeriod")]
+    public static extern uint TimeBeginPeriod(uint uMilliseconds);
+
+    [DllImport("winmm.dll", EntryPoint = "timeEndPeriod")]
+    public static extern uint TimeEndPeriod(uint uMilliseconds);
     #endregion
 }

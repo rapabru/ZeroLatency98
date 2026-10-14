@@ -150,6 +150,18 @@ public class LocalizationManager
             ["Profiles_RestoreBtn"] = "Restore to Normal (Undo All)",
             ["Profiles_LogGrp"] = "Execution & Snapshot Journal",
 
+            // Timer Resolution (Tab 2)
+            ["Timer_Group"] = "Windows NT Timer Resolution & Precision",
+            ["Timer_Notice"] = "Sets system-wide clock interrupt resolution. 0.5 ms eliminates thread wait jitter and micro-stutter in games.",
+            ["Timer_CurrentLbl"] = "Current Resolution:",
+            ["Timer_MaxLbl"] = "Maximum HW Precision:",
+            ["Timer_MinLbl"] = "Default Interval:",
+            ["Timer_SetMaxBtn"] = "Set Maximum (0.5 ms)",
+            ["Timer_Set1msBtn"] = "Set 1.0 ms",
+            ["Timer_RestoreBtn"] = "Restore Default (15.6 ms)",
+            ["Timer_StatusActive"] = "ACTIVE: High Precision (Zero Jitter)",
+            ["Timer_StatusDefault"] = "DEFAULT: Standard Resolution",
+
             // Tab 3: Background Manager
             ["Background_Info"] = "Supervised background applications. Whitelisted components (Steam, OBS, audio drivers) are permanently protected.",
             ["Background_PauseBtn"] = "Pause App",
@@ -299,6 +311,18 @@ public class LocalizationManager
             ["Profiles_ApplyBtn"] = "Aplicar Perfil Seleccionado",
             ["Profiles_RestoreBtn"] = "Restaurar a Normal (Deshacer Todo)",
             ["Profiles_LogGrp"] = "Registro de Ejecución y Snapshots",
+
+            // Timer Resolution (Tab 2)
+            ["Timer_Group"] = "Resolución del Temporizador de Windows NT",
+            ["Timer_Notice"] = "Ajusta la resolución de interrupciones del reloj del sistema. 0.5 ms elimina el jitter de espera de hilos y micro-stuttering en juegos.",
+            ["Timer_CurrentLbl"] = "Resolución Actual:",
+            ["Timer_MaxLbl"] = "Máxima Precisión (HW):",
+            ["Timer_MinLbl"] = "Intervalo por Defecto:",
+            ["Timer_SetMaxBtn"] = "Fijar Máxima (0.5 ms)",
+            ["Timer_Set1msBtn"] = "Fijar 1.0 ms",
+            ["Timer_RestoreBtn"] = "Restaurar por Defecto (15.6 ms)",
+            ["Timer_StatusActive"] = "ACTIVO: Alta Precisión (Cero Jitter)",
+            ["Timer_StatusDefault"] = "POR DEFECTO: Resolución Estándar",
 
             // Tab 3: Background Manager
             ["Background_Info"] = "Aplicaciones de fondo supervisadas. Componentes en lista blanca (Steam, OBS, drivers de audio) están protegidos permanentemente.",
