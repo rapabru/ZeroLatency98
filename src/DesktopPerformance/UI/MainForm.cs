@@ -1388,12 +1388,15 @@ public class MainForm : Form
             else if (_lvCompanionTools.Items.Count > 0 && _lvCompanionTools.Items[0].Tag is CompanionToolInfo defaultTool)
                 tool = defaultTool;
 
+            string explorerExe = SecurityUtils.GetWindowsExplorerExecutable();
+            string targetExplorer = File.Exists(explorerExe) ? explorerExe : "explorer.exe";
+
             if (tool != null && !string.IsNullOrEmpty(tool.ExecutablePath) && File.Exists(tool.ExecutablePath))
             {
                 string dir = Path.GetDirectoryName(tool.ExecutablePath)!;
                 Process.Start(new ProcessStartInfo
                 {
-                    FileName = "explorer.exe",
+                    FileName = targetExplorer,
                     Arguments = $"\"{dir}\"",
                     UseShellExecute = true
                 });
@@ -1408,7 +1411,7 @@ public class MainForm : Form
                 }
                 if (Directory.Exists(dir))
                 {
-                    Process.Start(new ProcessStartInfo { FileName = "explorer.exe", Arguments = $"\"{dir}\"", UseShellExecute = true });
+                    Process.Start(new ProcessStartInfo { FileName = targetExplorer, Arguments = $"\"{dir}\"", UseShellExecute = true });
                 }
             }
         };
@@ -1429,14 +1432,21 @@ public class MainForm : Form
 
             if (tool != null && !string.IsNullOrEmpty(tool.DownloadUrl))
             {
-                try
+                if (SecurityUtils.IsValidHttpsUrl(tool.DownloadUrl, out var validUri))
                 {
-                    Process.Start(new ProcessStartInfo { FileName = tool.DownloadUrl, UseShellExecute = true });
-                    AppendLog($"[COMPANION] Abriendo página web de {tool.Name}: {tool.DownloadUrl}");
+                    try
+                    {
+                        Process.Start(new ProcessStartInfo { FileName = validUri!.AbsoluteUri, UseShellExecute = true });
+                        AppendLog($"[COMPANION] Abriendo enlace oficial seguro: {validUri.AbsoluteUri}");
+                    }
+                    catch (Exception ex)
+                    {
+                        AppendLog($"[COMPANION] Error al abrir enlace en navegador: {ex.Message}");
+                    }
                 }
-                catch (Exception ex)
+                else
                 {
-                    AppendLog($"[COMPANION] Error al abrir enlace en navegador: {ex.Message}");
+                    AppendLog($"[COMPANION] Bloqueado intento de abrir URL no segura: {tool.DownloadUrl}");
                 }
             }
         };

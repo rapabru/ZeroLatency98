@@ -87,7 +87,8 @@ public class ProcessSupervisor
 
     public bool IsWhitelisted(string processName)
     {
-        return PermanentWhitelist.Contains(processName);
+        string cleanName = SecurityUtils.SanitizeProcessName(processName);
+        return PermanentWhitelist.Contains(cleanName) || PermanentWhitelist.Contains(processName);
     }
 
     public bool SetBackgroundModeAndAffinity(string processName, bool isolateCores, out int priorPriority, out long priorAffinity)
@@ -102,6 +103,7 @@ public class ProcessSupervisor
         if (procs.Length == 0)
             return false;
 
+        int currentSessionId = Process.GetCurrentProcess().SessionId;
         bool anySuccess = false;
         int totalCores = Environment.ProcessorCount;
 
@@ -122,6 +124,10 @@ public class ProcessSupervisor
         {
             try
             {
+                // Only touch processes belonging to current user's session
+                if (p.SessionId != currentSessionId)
+                    continue;
+
                 priorPriority = (int)p.PriorityClass;
                 priorAffinity = (long)p.ProcessorAffinity;
 
@@ -170,11 +176,17 @@ public class ProcessSupervisor
         if (procs.Length == 0)
             return false;
 
+        int currentSessionId = Process.GetCurrentProcess().SessionId;
         bool anySuccess = false;
+
         foreach (var p in procs)
         {
             try
             {
+                // Only touch processes belonging to current user's session
+                if (p.SessionId != currentSessionId)
+                    continue;
+
                 IntPtr hProcess = Win32Native.OpenProcess(
                     Win32Native.PROCESS_SET_INFORMATION | Win32Native.PROCESS_QUERY_INFORMATION, 
                     false, 
@@ -227,11 +239,16 @@ public class ProcessSupervisor
         if (procs.Length == 0)
             return false;
 
+        int currentSessionId = Process.GetCurrentProcess().SessionId;
         bool anySuccess = false;
+
         foreach (var p in procs)
         {
             try
             {
+                if (p.SessionId != currentSessionId)
+                    continue;
+
                 IntPtr hProcess = Win32Native.OpenProcess(Win32Native.PROCESS_SUSPEND_RESUME, false, p.Id);
                 if (hProcess != IntPtr.Zero)
                 {
@@ -259,11 +276,16 @@ public class ProcessSupervisor
         if (procs.Length == 0)
             return false;
 
+        int currentSessionId = Process.GetCurrentProcess().SessionId;
         bool anySuccess = false;
+
         foreach (var p in procs)
         {
             try
             {
+                if (p.SessionId != currentSessionId)
+                    continue;
+
                 IntPtr hProcess = Win32Native.OpenProcess(Win32Native.PROCESS_SUSPEND_RESUME, false, p.Id);
                 if (hProcess != IntPtr.Zero)
                 {

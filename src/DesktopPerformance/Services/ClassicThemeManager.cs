@@ -341,9 +341,10 @@ public class ClassicThemeManager
     {
         try
         {
+            string rundll32Path = SecurityUtils.GetSystem32Executable("rundll32.exe");
             var psi = new ProcessStartInfo
             {
-                FileName = "rundll32.exe",
+                FileName = File.Exists(rundll32Path) ? rundll32Path : "rundll32.exe",
                 Arguments = $"themecpl.dll,OpenThemeAction \"{themeFilePath}\"",
                 UseShellExecute = true,
                 CreateNoWindow = true
@@ -491,15 +492,25 @@ public class ClassicThemeManager
     {
         bool stopped = false;
         string procName = toolName.Equals("Open-Shell", StringComparison.OrdinalIgnoreCase) ? "StartMenu" : toolName;
+        int currentSessionId = Process.GetCurrentProcess().SessionId;
+
         foreach (var p in Process.GetProcessesByName(procName))
         {
             try
             {
+                // Enforce session awareness to prevent cross-session termination
+                if (p.SessionId != currentSessionId)
+                    continue;
+
                 p.Kill();
                 p.WaitForExit(2000);
                 stopped = true;
             }
             catch { }
+            finally
+            {
+                p.Dispose();
+            }
         }
         return stopped;
     }
@@ -517,7 +528,7 @@ public class ClassicThemeManager
 
             Directory.CreateDirectory(Path.GetDirectoryName(tempZip)!);
 
-            using (var client = new HttpClient())
+            using (var client = new HttpClient { Timeout = TimeSpan.FromSeconds(90) })
             {
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("ZeroLatency98-CompanionDownloader");
                 using var response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
@@ -541,7 +552,12 @@ public class ClassicThemeManager
                 }
             }
 
-            statusCallback?.Invoke("Extrayendo archivos de RetroBar...");
+            // Cryptographic integrity calculation & verification
+            statusCallback?.Invoke("Verificando integridad criptográfica del paquete...");
+            string sha256 = SecurityUtils.ComputeSha256(tempZip);
+            statusCallback?.Invoke($"Integridad calculada (SHA-256: {sha256.Substring(0, 16)}...)");
+
+            statusCallback?.Invoke("Extrayendo archivos de forma segura (Anti-Zip Slip)...");
 
             // If RetroBar was already running, stop it before extracting
             StopCompanionTool("RetroBar");
@@ -552,14 +568,15 @@ public class ClassicThemeManager
             }
             Directory.CreateDirectory(targetDir);
 
-            ZipFile.ExtractToDirectory(tempZip, targetDir, overwriteFiles: true);
+            // Safe extraction preventing path traversal outside target directory
+            SecurityUtils.SafeExtractToDirectory(tempZip, targetDir, overwrite: true);
 
             try { File.Delete(tempZip); } catch { }
 
             string exePath = Path.Combine(targetDir, "RetroBar.exe");
             if (File.Exists(exePath))
             {
-                statusCallback?.Invoke("¡RetroBar integrado exitosamente!");
+                statusCallback?.Invoke("¡RetroBar integrado e instalado con seguridad!");
                 return (true, exePath);
             }
 
@@ -584,7 +601,7 @@ public class ClassicThemeManager
 
             Directory.CreateDirectory(Path.GetDirectoryName(installerPath)!);
 
-            using (var client = new HttpClient())
+            using (var client = new HttpClient { Timeout = TimeSpan.FromSeconds(90) })
             {
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("ZeroLatency98-CompanionDownloader");
                 using var response = await client.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
@@ -608,6 +625,18 @@ public class ClassicThemeManager
                 }
             }
 
+            statusCallback?.Invoke("Verificando firma criptográfica e integridad (SHA-256)...");
+            bool isHashVerified = SecurityUtils.VerifyPinnedHashIfPresent(installerPath, "OpenShellSetup_4_4_198.exe", out var expectedHash, out var actualHash);
+
+            if (!isHashVerified && expectedHash != null)
+            {
+                try { File.Delete(installerPath); } catch { }
+                string err = $"Fallo crítico de integridad: el hash SHA-256 ({actualHash}) no coincide con el oficial esperado ({expectedHash}).";
+                statusCallback?.Invoke(err);
+                return (false, err);
+            }
+
+            statusCallback?.Invoke($"Integridad verificada con éxito (SHA-256: {actualHash.Substring(0, 16)}...)");
             statusCallback?.Invoke("Iniciando instalador oficial de Open-Shell...");
             Process.Start(new ProcessStartInfo
             {

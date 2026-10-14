@@ -134,8 +134,22 @@ public class VisualEffectsManager
         }
     }
 
-    public void BroadcastSettingChange(string section)
+    private static DateTime _lastBroadcast = DateTime.MinValue;
+    private static readonly object _broadcastLock = new();
+
+    public void BroadcastSettingChange(string section, bool force = false)
     {
+        lock (_broadcastLock)
+        {
+            var now = DateTime.UtcNow;
+            if (!force && (now - _lastBroadcast).TotalMilliseconds < 250)
+            {
+                // Debounce rapid successive broadcasts within 250ms to prevent UI freezing
+                return;
+            }
+            _lastBroadcast = now;
+        }
+
         try
         {
             Win32Native.SendMessageTimeout(

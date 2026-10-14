@@ -58,8 +58,48 @@ public class ExportManager
             if (!File.Exists(sourcePath))
                 return null;
 
+            var fileInfo = new FileInfo(sourcePath);
+            // Enforce 512 KB maximum file size to prevent OutOfMemory DoS
+            if (fileInfo.Length > 512 * 1024)
+            {
+                Debug.WriteLine("Rejected profile import: File size exceeds 512 KB limit.");
+                return null;
+            }
+
             string json = File.ReadAllText(sourcePath);
-            return JsonSerializer.Deserialize<List<SmartProfile>>(json);
+            var loaded = JsonSerializer.Deserialize<List<SmartProfile>>(json);
+            if (loaded == null)
+                return null;
+
+            var validated = new List<SmartProfile>();
+            foreach (var profile in loaded)
+            {
+                if (string.IsNullOrWhiteSpace(profile.Name))
+                    continue;
+
+                // Restrict and sanitize string fields
+                if (profile.Name.Length > 64)
+                    profile.Name = profile.Name.Substring(0, 64);
+
+                if (!string.IsNullOrEmpty(profile.Description) && profile.Description.Length > 256)
+                    profile.Description = profile.Description.Substring(0, 256);
+
+                profile.TriggerProcessName = SecurityUtils.SanitizeProcessName(profile.TriggerProcessName);
+
+                if (profile.CustomWhitelistedProcesses != null)
+                {
+                    profile.CustomWhitelistedProcesses = profile.CustomWhitelistedProcesses
+                        .Select(SecurityUtils.SanitizeProcessName)
+                        .Where(s => !string.IsNullOrEmpty(s))
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .Take(50)
+                        .ToList();
+                }
+
+                validated.Add(profile);
+            }
+
+            return validated;
         }
         catch (Exception ex)
         {

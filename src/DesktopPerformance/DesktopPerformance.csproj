@@ -13,6 +13,10 @@
     <AssemblyVersion>1.5.0.0</AssemblyVersion>
     <FileVersion>1.5.0.0</FileVersion>
     <ApplicationIcon>..\..\assets\ZeroLatency98.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <HighEntropyVA>true</HighEntropyVA>
+    <Deterministic>true</Deterministic>
   </PropertyGroup>
 
   <ItemGroup>
