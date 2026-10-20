@@ -37,7 +37,7 @@ Monitor and manage secondary applications (Discord, Chrome, Steam, Spotify, OneD
 |---|---|---|
 | **1. System Topology & Monitors** | ![Topology Preview](docs/screenshots/tab_en_0_system_topology.png) | Inspect displays, resolutions, refresh rates (Hz), DPI scaling, and active DWM hardware composition state. |
 | **2. Profiles & Optimization** | ![Profiles Preview](docs/screenshots/tab_en_1_profiles_optimization.png) | Instant switching between *Normal*, *Low-Interference*, and *Maximum Responsiveness* profiles, featuring NT Kernel Timer Resolution control (0.5 ms / 1.0 ms precision) and transactional JSON rollback snapshots. |
-| **3. Background Manager** | ![Background Preview](docs/screenshots/tab_en_2_background_manager.png) | Granular process supervision with `NtSuspendProcess` pausing and `PROCESS_MODE_BACKGROUND_BEGIN` Eco priority scheduling. |
+| **3. Background Manager** | ![Background Preview](docs/screenshots/tab_en_2_background_manager.png) | Granular process supervision with safe Windows QoS background scheduling (`PROCESS_MODE_BACKGROUND_BEGIN/END`), eliminating deadlocks and anti-cheat conflicts. |
 | **4. Verification & Benchmark** | ![Benchmark Preview](docs/screenshots/tab_en_3_verification_benchmark.png) | Automated Trilateral Benchmark (Baseline vs Optimized vs Delta) using native Windows PDH telemetry counters. |
 | **5. Diagnostics & Smart Profiles** | ![Diagnostics Preview](docs/screenshots/tab_en_4_diagnostics_smart_profiles.png) | *"Why is system busy?"* deep analysis, signature database, and background game watcher for automatic profile engagement. |
 | **6. Multi-Monitor Studio & VRR** | ![VRR Preview](docs/screenshots/tab_en_5_multi_monitor_vrr.png) | Mitigates VRR/G-Sync de-synchronization and frame pacing jitter caused by hardware-accelerated apps on secondary displays. |
@@ -169,7 +169,7 @@ Requires [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) on Windo
 git clone https://github.com/rapabru/ZeroLatency98.git
 cd ZeroLatency98
 
-# 2. Run the test suite (all 27 unit tests should pass)
+# 2. Run the test suite (all 57 unit tests should pass)
 dotnet test
 
 # 3. Launch in development mode
@@ -178,6 +178,19 @@ dotnet test
 # 4. Compile a self-contained, standalone single-file x64 executable
 dotnet publish src/DesktopPerformance -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
 ```
+
+---
+
+## 🛡️ Security Hardening & Purge of Legacy Releases (v1.0.0 – v1.5.0)
+
+All releases prior to **v1.5.1** (`v1.0.0` through `v1.5.0`) were early development prototypes and proof-of-concept builds. Following a comprehensive codebase security audit, **all legacy releases have been permanently purged from GitHub Releases** to safeguard end users and guarantee enterprise-grade stability.
+
+### Why older releases were retired:
+1. **Elimination of `NtSuspendProcess` Deadlock & Anti-Cheat Risks:** Early builds paused background processes using undocumented kernel hooks (`NtSuspendProcess`), creating risks of UI deadlocks with DirectX/DWM locks and triggering false positives in gaming anti-cheat engines (Easy Anti-Cheat, BattlEye, Vanguard). `v1.5.1` replaces this entirely with official, clean Windows QoS scheduling (`PROCESS_MODE_BACKGROUND_BEGIN/END`).
+2. **Strict Cryptographic Pinning (SHA-256):** Older versions downloaded companion tools without cryptographic hash validation. `v1.5.1` enforces immutable SHA-256 hash checks (`ZL98-SEC-01`) before any archive extraction or execution.
+3. **Anti-ZipSlip & Path Traversal Guard:** `v1.5.1` enforces strict boundary verification against directory traversal attacks in theme files and archives (`ZL98-SEC-02`).
+4. **Canonical Execution Paths:** Eliminates risk of binary/PATH-hijacking by resolving binaries (`rundll32.exe`, `explorer.exe`) directly from `Environment.SystemDirectory` (`ZL98-SEC-03`).
+5. **100% Non-Demo & Zero-Placebo Precision:** All telemetry, discrete GPU detection (filtering virtual display drivers), thread wake-up jitter measurement, and secondary monitor minimization are verified directly against native Windows hardware APIs.
 
 ---
 

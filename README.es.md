@@ -124,7 +124,7 @@ Requiere [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0):
 git clone https://github.com/rapabru/ZeroLatency98.git
 cd ZeroLatency98
 
-# Ejecutar las pruebas unitarias (27 pruebas superadas)
+# Ejecutar las pruebas unitarias (57 pruebas superadas)
 dotnet test
 
 # Ejecutar en modo desarrollo
@@ -133,6 +133,19 @@ dotnet test
 # Publicar ejecutable standalone x64
 dotnet publish src/DesktopPerformance -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
 ```
+
+---
+
+## 🛡️ Endurecimiento de Seguridad y Purga de Versiones Previas (v1.0.0 – v1.5.0)
+
+Todas las versiones anteriores a la **v1.5.1** (`v1.0.0` hasta `v1.5.0`) correspondieron a prototipos iniciales de desarrollo y pruebas de concepto. Tras una auditoría exhaustiva de seguridad del código fuente, **todas las versiones anteriores fueron retiradas y purgadas de los Releases de GitHub** para salvaguardar la estabilidad de los usuarios y garantizar la máxima seguridad.
+
+### Por qué se purgaron las versiones anteriores:
+1. **Eliminación de llamadas no documentadas del kernel (`NtSuspendProcess`):** Las compilaciones iniciales pausaban procesos secundarios mediante `NtSuspendProcess`, lo que conllevaba riesgos de bloqueos del sistema (deadlocks en cerrojos gráficos de DirectX/DWM) y falsos positivos en motores antitrampas de juegos (Easy Anti-Cheat, BattlEye, Vanguard). La versión `v1.5.1` reemplaza esto por el modo oficial de Calidad de Servicio (QoS) de Windows (`PROCESS_MODE_BACKGROUND_BEGIN/END`), degradando la prioridad de CPU e I/O de forma totalmente limpia y segura.
+2. **Validación Criptográfica Inmutable (SHA-256):** Las versiones anteriores descargaban herramientas complementarias sin validar la integridad del binario. `v1.5.1` comprueba estrictamente el hash SHA-256 antes de descomprimir o ejecutar cualquier archivo (`ZL98-SEC-01`).
+3. **Protección contra Zip-Slip y Path Traversal:** Se incorporó validación estricta de rutas para evitar que archivos `.zip` o temas maliciosos escapen del directorio de la aplicación (`ZL98-SEC-02`).
+4. **Rutas Canónicas del Sistema:** Se eliminó cualquier riesgo de secuestro de binarios ejecutando `rundll32.exe` y `explorer.exe` exclusivamente desde la ruta canónica del sistema (`C:\Windows\System32`) (`ZL98-SEC-03`).
+5. **Precisión 100% Real y Cero Placebo:** Detección de hardware físico real (filtrando adaptadores virtuales), medición empírica de jitter del kernel en nanosegundos y minimización real de ventanas en pantallas secundarias.
 
 ---
 

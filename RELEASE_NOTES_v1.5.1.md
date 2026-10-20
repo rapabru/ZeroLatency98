@@ -4,7 +4,20 @@ Version 1.5.1 is a comprehensive security hardening and performance-verification
 
 ---
 
-## 🔒 Security Hardening (ZL98-SEC)
+## 🛡️ Notice: Purge & Deprecation of Pre-Release Versions (v1.0.0 – v1.5.0)
+
+All builds prior to **v1.5.1** (`v1.0.0` through `v1.5.0`) represented exploratory development phases and proof-of-concept prototypes. Following a formal security and code audit, **all older releases have been permanently purged from GitHub Releases** to protect users and guarantee system integrity.
+
+### Why older releases were retired:
+1. **Elimination of `NtSuspendProcess` Deadlock & Anti-Cheat Risks:** Early builds paused background processes using undocumented `ntdll.dll` calls (`NtSuspendProcess`), creating risks of UI deadlocks with DirectX/DWM locks and triggering false positives in gaming anti-cheat systems (Easy Anti-Cheat, BattlEye, Vanguard). Starting in `v1.5.1`, process priority is downgraded via standard Windows Quality of Service (`PROCESS_MODE_BACKGROUND_BEGIN`), completely avoiding thread lockups.
+2. **Cryptographic Supply-Chain Protection:** Early versions fetched companion utilities without hash validation. `v1.5.1` implements hardcoded SHA-256 cryptographic verification (`ZL98-SEC-01`), discarding any payload that does not match bit-for-bit.
+3. **Zip-Slip & Path Traversal Prevention:** Added strict boundary enforcement (`ZL98-SEC-02`) so theme archives cannot extract files outside designated app directories.
+4. **Binary Hijacking Defense:** Replaced unqualified system invocations (`rundll32`, `explorer`) with fully qualified paths from `Environment.SystemDirectory` (`ZL98-SEC-03`).
+5. **Elimination of Placebo Metrics:** Earlier preview builds contained prototype heuristics when hardware access was unavailable; `v1.5.1` utilizes 100% genuine hardware inspection, actual discrete GPU identification, real physical monitor filtering, and nanosecond timer resolution measurements.
+
+---
+
+## 🔒 Security Hardening Details (ZL98-SEC)
 
 1. **Cryptographic SHA-256 Pinning (`ZL98-SEC-01`):**
    - Companion tool downloads (RetroBar, Open-Shell) are verified against official pinned SHA-256 hashes prior to extraction or execution.
