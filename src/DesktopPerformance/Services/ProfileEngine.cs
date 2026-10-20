@@ -146,7 +146,7 @@ public class ProfileEngine
             {
                 if (_processes.SuspendProcess(app.ProcessName))
                 {
-                    log.Add($"[PROCESS] Suspended sync engine: {app.DisplayName}");
+                    log.Add($"[PROCESS] Throttled background sync engine (QoS Background): {app.DisplayName}");
                 }
             }
             else

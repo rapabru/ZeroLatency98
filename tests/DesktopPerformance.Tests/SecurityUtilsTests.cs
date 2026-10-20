@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
 using DesktopPerformance.Models;
@@ -137,5 +138,68 @@ public class SecurityUtilsTests : IDisposable
 
         var result = manager.ImportProfiles(oversizedFile);
         Assert.Null(result); // Must be rejected due to size bound
+    }
+
+    [Fact]
+    public void VerifyPinnedHashStrict_ValidatesKnownHashesAndFailsClosed()
+    {
+        string dummyFile = Path.Combine(_tempDir, "dummy_unpinned.bin");
+        File.WriteAllText(dummyFile, "Random unverified binary payload");
+
+        // Unpinned file must fail closed
+        bool verifiedUnpinned = SecurityUtils.VerifyPinnedHashStrict(dummyFile, "unknown_payload.exe", out var expHash, out var actHash);
+        Assert.False(verifiedUnpinned);
+        Assert.Null(expHash);
+        Assert.NotNull(actHash);
+
+        // Tampered file with known name must fail
+        string tamperedRetroBar = Path.Combine(_tempDir, "RetroBar.Portable.zip");
+        File.WriteAllText(tamperedRetroBar, "Tampered fake zip bytes");
+        bool verifiedTampered = SecurityUtils.VerifyPinnedHashStrict(tamperedRetroBar, "RetroBar.Portable.zip", out var expRetroHash, out var actRetroHash);
+        Assert.False(verifiedTampered);
+        Assert.NotNull(expRetroHash);
+        Assert.NotEqual(expRetroHash, actRetroHash);
+    }
+
+    [Fact]
+    public void ExportManager_ImportProfiles_CapsMassiveProfileLists()
+    {
+        var manager = new ExportManager();
+        string massiveListFile = Path.Combine(_tempDir, "massive_profiles.json");
+
+        var list = new List<SmartProfile>();
+        for (int i = 0; i < 150; i++)
+        {
+            list.Add(new SmartProfile
+            {
+                Name = $"Profile_{i}",
+                Description = $"Description for profile {i}",
+                TriggerProcessName = "game.exe"
+            });
+        }
+
+        manager.ExportProfiles(list, massiveListFile);
+
+        var imported = manager.ImportProfiles(massiveListFile);
+        Assert.NotNull(imported);
+        Assert.True(imported.Count <= 100, $"Expected maximum 100 profiles, but got {imported.Count}");
+    }
+
+    [Fact]
+    public void ProcessSupervisor_IsGenuineSystemProcess_DetectsSystemVsNonSystemProcesses()
+    {
+        // 1. The test runner process is in .NET SDK / program files, NOT in Windows/System32
+        using var currentProc = Process.GetCurrentProcess();
+        bool isRunnerSystem = ProcessSupervisor.IsGenuineSystemProcess(currentProc);
+        Assert.False(isRunnerSystem, "Test runner outside System32 must NOT be classified as genuine system process");
+
+        // 2. Windows Explorer (if running) is in C:\Windows, so it must be classified as genuine
+        var explorers = Process.GetProcessesByName("explorer");
+        if (explorers.Length > 0)
+        {
+            using var explorer = explorers[0];
+            bool isExplorerSystem = ProcessSupervisor.IsGenuineSystemProcess(explorer);
+            Assert.True(isExplorerSystem, "explorer.exe inside Windows directory must be classified as genuine");
+        }
     }
 }

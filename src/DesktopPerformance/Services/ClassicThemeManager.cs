@@ -339,13 +339,32 @@ public class ClassicThemeManager
 
     public static void LaunchThemeFile(string themeFilePath)
     {
+        if (string.IsNullOrWhiteSpace(themeFilePath) || !File.Exists(themeFilePath))
+            return;
+
+        // Security check (ZL98-SEC-03): Only permit strictly validated .theme files
+        string ext = Path.GetExtension(themeFilePath);
+        if (!string.Equals(ext, ".theme", StringComparison.OrdinalIgnoreCase))
+        {
+            Debug.WriteLine($"Blocked unsafe theme launch: {themeFilePath} (expected .theme)");
+            return;
+        }
+
+        string canonicalPath = Path.GetFullPath(themeFilePath);
+
         try
         {
             string rundll32Path = SecurityUtils.GetSystem32Executable("rundll32.exe");
+            if (!File.Exists(rundll32Path))
+            {
+                Debug.WriteLine($"Canonical rundll32.exe not found in SystemDirectory: {rundll32Path}");
+                return;
+            }
+
             var psi = new ProcessStartInfo
             {
-                FileName = File.Exists(rundll32Path) ? rundll32Path : "rundll32.exe",
-                Arguments = $"themecpl.dll,OpenThemeAction \"{themeFilePath}\"",
+                FileName = rundll32Path,
+                Arguments = $"themecpl.dll,OpenThemeAction \"{canonicalPath}\"",
                 UseShellExecute = true,
                 CreateNoWindow = true
             };
@@ -357,7 +376,7 @@ public class ClassicThemeManager
             {
                 Process.Start(new ProcessStartInfo
                 {
-                    FileName = themeFilePath,
+                    FileName = canonicalPath,
                     UseShellExecute = true
                 });
             }
@@ -519,8 +538,8 @@ public class ClassicThemeManager
     {
         try
         {
-            statusCallback?.Invoke("Conectando con GitHub Releases para obtener RetroBar...");
-            string downloadUrl = "https://github.com/dremin/RetroBar/releases/latest/download/RetroBar.Portable.zip";
+            statusCallback?.Invoke("Conectando con GitHub Releases para obtener RetroBar v1.22.122...");
+            string downloadUrl = "https://github.com/dremin/RetroBar/releases/download/v1.22.122/RetroBar.Portable.zip";
 
             string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             string targetDir = Path.Combine(appData, "DesktopPerformance98", "RetroBar");
@@ -552,11 +571,19 @@ public class ClassicThemeManager
                 }
             }
 
-            // Cryptographic integrity calculation & verification
-            statusCallback?.Invoke("Verificando integridad criptográfica del paquete...");
-            string sha256 = SecurityUtils.ComputeSha256(tempZip);
-            statusCallback?.Invoke($"Integridad calculada (SHA-256: {sha256.Substring(0, 16)}...)");
+            // Cryptographic integrity calculation & verification (ZL98-SEC-01)
+            statusCallback?.Invoke("Verificando integridad criptográfica oficial (SHA-256)...");
+            bool isHashVerified = SecurityUtils.VerifyPinnedHashStrict(tempZip, "RetroBar.Portable.zip", out var expectedHash, out var actualHash);
 
+            if (!isHashVerified)
+            {
+                try { File.Delete(tempZip); } catch { }
+                string err = $"Fallo crítico de integridad (ZL98-SEC-01): el hash SHA-256 ({actualHash}) no coincide con el oficial esperado ({expectedHash ?? "SIN HASH REGISTRADO"}).";
+                statusCallback?.Invoke(err);
+                return (false, err);
+            }
+
+            statusCallback?.Invoke($"Integridad verificada con éxito (SHA-256: {actualHash.Substring(0, 16)}...)");
             statusCallback?.Invoke("Extrayendo archivos de forma segura (Anti-Zip Slip)...");
 
             // If RetroBar was already running, stop it before extracting
@@ -626,12 +653,12 @@ public class ClassicThemeManager
             }
 
             statusCallback?.Invoke("Verificando firma criptográfica e integridad (SHA-256)...");
-            bool isHashVerified = SecurityUtils.VerifyPinnedHashIfPresent(installerPath, "OpenShellSetup_4_4_198.exe", out var expectedHash, out var actualHash);
+            bool isHashVerified = SecurityUtils.VerifyPinnedHashStrict(installerPath, "OpenShellSetup_4_4_198.exe", out var expectedHash, out var actualHash);
 
-            if (!isHashVerified && expectedHash != null)
+            if (!isHashVerified)
             {
                 try { File.Delete(installerPath); } catch { }
-                string err = $"Fallo crítico de integridad: el hash SHA-256 ({actualHash}) no coincide con el oficial esperado ({expectedHash}).";
+                string err = $"Fallo crítico de integridad (ZL98-SEC-01): el hash SHA-256 ({actualHash}) no coincide con el oficial esperado ({expectedHash ?? "SIN HASH REGISTRADO"}).";
                 statusCallback?.Invoke(err);
                 return (false, err);
             }

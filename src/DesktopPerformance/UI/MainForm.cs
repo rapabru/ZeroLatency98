@@ -329,7 +329,7 @@ public class MainForm : Form
                 "ZeroLatency98 - Windows Latency & Classic Theme Suite\n\n" +
                 "Authentic Windows 98/2000 Retro Aesthetics for Windows 10/11.\n" +
                 "Zero bloat, zero placebo, atomic snapshots, VRR protection, and System-Wide Classic Theme Mode.\n\n" +
-                "Version 1.5.0",
+                "Version 1.5.1",
                 "About ZeroLatency98", MessageBoxButtons.OK, MessageBoxIcon.Information);
         });
         _menuHelp.DropDownItems.Add(_menuAbout);
@@ -718,7 +718,7 @@ public class MainForm : Form
 
         _btnPauseApp = new RetroButton
         {
-            Text = "Pause App",
+            Text = "Throttle (QoS)",
             Location = new Point(0, 6),
             Size = new Size(110, 28)
         };
@@ -729,7 +729,7 @@ public class MainForm : Form
                 var proc = _lvApps.SelectedItems[0].SubItems[1].Text;
                 if (_processes.SuspendProcess(proc))
                 {
-                    AppendLog($"[BACKGROUND] Suspended process: {proc}");
+                    AppendLog($"[BACKGROUND] Throttled process to background QoS: {proc}");
                     RefreshBackgroundApps();
                 }
             }
@@ -1505,7 +1505,16 @@ public class MainForm : Form
                 tool = defaultTool;
 
             string explorerExe = SecurityUtils.GetWindowsExplorerExecutable();
-            string targetExplorer = File.Exists(explorerExe) ? explorerExe : "explorer.exe";
+            if (!File.Exists(explorerExe))
+            {
+                explorerExe = Path.Combine(Environment.SystemDirectory, "explorer.exe");
+            }
+            if (!File.Exists(explorerExe))
+            {
+                AppendLog("[SECURITY] Canonical explorer.exe not found on system. Execution aborted.");
+                return;
+            }
+            string targetExplorer = explorerExe;
 
             if (tool != null && !string.IsNullOrEmpty(tool.ExecutablePath) && File.Exists(tool.ExecutablePath))
             {

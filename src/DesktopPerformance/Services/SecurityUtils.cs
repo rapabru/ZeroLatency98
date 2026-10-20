@@ -20,7 +20,9 @@ public static partial class SecurityUtils
     private static readonly Dictionary<string, string> PinnedHashes = new(StringComparer.OrdinalIgnoreCase)
     {
         // Open-Shell v4.4.198 official setup executable
-        ["OpenShellSetup_4_4_198.exe"] = "2b1efbe5591ee599b581b22e7075c3f9157cf4356ef231ec69b0fa5c4d3bc35f"
+        ["OpenShellSetup_4_4_198.exe"] = "2b1efbe5591ee599b581b22e7075c3f9157cf4356ef231ec69b0fa5c4d3bc35f",
+        // RetroBar v1.22.122 official portable release zip
+        ["RetroBar.Portable.zip"] = "6ab0d0972535e5efedc13c83403b52883edb06881d2d6aa18bf8af379bc7a128"
     };
 
     /// <summary>
@@ -50,10 +52,10 @@ public static partial class SecurityUtils
     }
 
     /// <summary>
-    /// Checks if a known pinned hash exists for a given file name and validates it.
-    /// Returns true if verified or if no strict pinned hash is required.
+    /// Checks if a known pinned hash exists for a given file name and strictly validates it.
+    /// Fails closed: returns false if the hash does not match or if no pinned hash is registered (ZL98-SEC-01).
     /// </summary>
-    public static bool VerifyPinnedHashIfPresent(string filePath, string fileName, out string? expectedHash, out string actualHash)
+    public static bool VerifyPinnedHashStrict(string filePath, string fileName, out string? expectedHash, out string actualHash)
     {
         actualHash = ComputeSha256(filePath);
         if (PinnedHashes.TryGetValue(fileName, out expectedHash))
@@ -61,9 +63,17 @@ public static partial class SecurityUtils
             return string.Equals(actualHash, expectedHash, StringComparison.OrdinalIgnoreCase);
         }
 
-        // No pinned hash specified: integrity calculation succeeded
+        // Fail-closed: unpinned binaries cannot be executed blindly
         expectedHash = null;
-        return true;
+        return false;
+    }
+
+    /// <summary>
+    /// Legacy alias delegating strictly to <see cref="VerifyPinnedHashStrict"/>.
+    /// </summary>
+    public static bool VerifyPinnedHashIfPresent(string filePath, string fileName, out string? expectedHash, out string actualHash)
+    {
+        return VerifyPinnedHashStrict(filePath, fileName, out expectedHash, out actualHash);
     }
 
     /// <summary>
@@ -108,6 +118,16 @@ public static partial class SecurityUtils
                 if (!string.IsNullOrEmpty(parentDir) && !Directory.Exists(parentDir))
                 {
                     Directory.CreateDirectory(parentDir);
+                }
+
+                // Guard against symlink / junction point overwriting (ZL98-SEC-02 / CWE-59)
+                if (File.Exists(entryDestPath))
+                {
+                    var fileAttr = File.GetAttributes(entryDestPath);
+                    if ((fileAttr & FileAttributes.ReparsePoint) != 0)
+                    {
+                        throw new InvalidOperationException($"Security Violation: Extraction targeting reparse point / symlink is prohibited: {entry.FullName}");
+                    }
                 }
 
                 entry.ExtractToFile(entryDestPath, overwrite);

@@ -25,6 +25,8 @@ public class ProcessSupervisor
         "services"          // Service Control Manager
     };
 
+    private readonly Dictionary<string, (int priority, long affinity)> _throttledStates = new(StringComparer.OrdinalIgnoreCase);
+
     private static readonly (string Name, string ProcessName, string Description, bool IsWhitelisted)[] TargetApps = new[]
     {
         ("OneDrive", "OneDrive", "Microsoft cloud sync; performs continuous disk indexing and network traffic.", false),
@@ -85,10 +87,52 @@ public class ProcessSupervisor
         return result;
     }
 
+    private static readonly HashSet<string> CriticalWindowsCoreProcesses = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "dwm", "audiodg", "csrss", "lsass", "smss", "winlogon", "services"
+    };
+
     public bool IsWhitelisted(string processName)
     {
         string cleanName = SecurityUtils.SanitizeProcessName(processName);
         return PermanentWhitelist.Contains(cleanName) || PermanentWhitelist.Contains(processName);
+    }
+
+    /// <summary>
+    /// Validates whether a running process instance is a genuine system component by checking its
+    /// binary path resides within System32 or Windows directories (ZL98-SEC-04).
+    /// </summary>
+    public static bool IsGenuineSystemProcess(Process p)
+    {
+        try
+        {
+            if (p.SessionId == 0)
+                return true;
+
+            string? exePath = null;
+            try
+            {
+                exePath = p.MainModule?.FileName;
+            }
+            catch
+            {
+                // Access denied on MainModule typically confirms an elevated / protected system service
+                return true;
+            }
+
+            if (string.IsNullOrEmpty(exePath))
+                return true;
+
+            string systemDir = Environment.SystemDirectory;
+            string winDir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+
+            return exePath.StartsWith(systemDir, StringComparison.OrdinalIgnoreCase) ||
+                   exePath.StartsWith(winDir, StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return true;
+        }
     }
 
     public bool SetBackgroundModeAndAffinity(string processName, bool isolateCores, out int priorPriority, out long priorAffinity)
@@ -96,12 +140,22 @@ public class ProcessSupervisor
         priorPriority = (int)ProcessPriorityClass.Normal;
         priorAffinity = -1;
 
-        if (IsWhitelisted(processName))
-            return false;
-
         var procs = Process.GetProcessesByName(processName);
         if (procs.Length == 0)
             return false;
+
+        if (IsWhitelisted(processName))
+        {
+            // If it's a known Windows core process name, only protect it if genuine (prevent whitelist spoofing)
+            if (CriticalWindowsCoreProcesses.Contains(processName) && !procs.Any(IsGenuineSystemProcess))
+            {
+                // Rogue process spoofing system name outside System32: proceed to throttle
+            }
+            else
+            {
+                return false;
+            }
+        }
 
         int currentSessionId = Process.GetCurrentProcess().SessionId;
         bool anySuccess = false;
@@ -230,80 +284,45 @@ public class ProcessSupervisor
         return anySuccess;
     }
 
+    /// <summary>
+    /// Safely throttles a background process using Windows QoS Background Mode and CPU core isolation.
+    /// Replaces the undocumented native NtSuspendProcess (ZL98-SEC-06) to prevent deadlocks and desktop lockups.
+    /// </summary>
     public bool SuspendProcess(string processName)
     {
         if (IsWhitelisted(processName))
             return false;
 
-        var procs = Process.GetProcessesByName(processName);
-        if (procs.Length == 0)
-            return false;
-
-        int currentSessionId = Process.GetCurrentProcess().SessionId;
-        bool anySuccess = false;
-
-        foreach (var p in procs)
+        bool success = SetBackgroundModeAndAffinity(processName, isolateCores: true, out int priorPri, out long priorAff);
+        if (success)
         {
-            try
+            lock (_throttledStates)
             {
-                if (p.SessionId != currentSessionId)
-                    continue;
-
-                IntPtr hProcess = Win32Native.OpenProcess(Win32Native.PROCESS_SUSPEND_RESUME, false, p.Id);
-                if (hProcess != IntPtr.Zero)
-                {
-                    try
-                    {
-                        int ntStatus = Win32Native.NtSuspendProcess(hProcess);
-                        if (ntStatus == 0) anySuccess = true;
-                    }
-                    finally
-                    {
-                        Win32Native.CloseHandle(hProcess);
-                    }
-                }
+                _throttledStates[processName] = (priorPri, priorAff);
             }
-            catch { }
-            finally { p.Dispose(); }
         }
-
-        return anySuccess;
+        return success;
     }
 
+    /// <summary>
+    /// Safely restores a previously throttled process back to normal Windows execution and system affinity.
+    /// Replaces the undocumented native NtResumeProcess (ZL98-SEC-06).
+    /// </summary>
     public bool ResumeProcess(string processName)
     {
-        var procs = Process.GetProcessesByName(processName);
-        if (procs.Length == 0)
-            return false;
+        int priority = (int)ProcessPriorityClass.Normal;
+        long affinity = -1;
 
-        int currentSessionId = Process.GetCurrentProcess().SessionId;
-        bool anySuccess = false;
-
-        foreach (var p in procs)
+        lock (_throttledStates)
         {
-            try
+            if (_throttledStates.TryGetValue(processName, out var state))
             {
-                if (p.SessionId != currentSessionId)
-                    continue;
-
-                IntPtr hProcess = Win32Native.OpenProcess(Win32Native.PROCESS_SUSPEND_RESUME, false, p.Id);
-                if (hProcess != IntPtr.Zero)
-                {
-                    try
-                    {
-                        int ntStatus = Win32Native.NtResumeProcess(hProcess);
-                        if (ntStatus == 0) anySuccess = true;
-                    }
-                    finally
-                    {
-                        Win32Native.CloseHandle(hProcess);
-                    }
-                }
+                priority = state.priority;
+                affinity = state.affinity;
+                _throttledStates.Remove(processName);
             }
-            catch { }
-            finally { p.Dispose(); }
         }
 
-        return anySuccess;
+        return RestoreNormalModeAndAffinity(processName, priority, affinity);
     }
 }

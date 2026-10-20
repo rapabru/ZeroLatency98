@@ -4,7 +4,7 @@
 
 [![GitHub Release](https://img.shields.io/github/v/release/rapabru/ZeroLatency98)](https://github.com/rapabru/ZeroLatency98/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-54%2F54%20Passing-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-57%2F57%20Passing-brightgreen.svg)]()
 [![Platform: Windows 11](https://img.shields.io/badge/Platform-Windows%2011%20x64-blue.svg)]()
 
 🌐 **[Read this documentation in English (README.md)](README.md)**
@@ -13,10 +13,10 @@ Una herramienta de precisión para Windows 11 diseñada bajo los principios de *
 
 ---
 
-### ⬇️ [Descargar la última versión (v1.5.0)](https://github.com/rapabru/ZeroLatency98/releases/latest)
+### ⬇️ [Descargar la última versión (v1.5.1)](https://github.com/rapabru/ZeroLatency98/releases/latest)
 
-- **Standalone x64 (`ZeroLatency98-v1.5.0-win-x64-standalone.zip`):** Un único archivo ejecutable autónomo. No requiere instalar runtimes ni dependencias. Descargar, descomprimir y ejecutar directamente en Windows 11 x64.
-- **Portátil Ligero (`ZeroLatency98-v1.5.0-portable.zip`):** Paquete ultraligero (requiere .NET 9 Desktop Runtime instalado).
+- **Standalone x64 (`ZeroLatency98-v1.5.1-win-x64-standalone.zip`):** Un único archivo ejecutable autónomo. No requiere instalar runtimes ni dependencias. Descargar, descomprimir y ejecutar directamente en Windows 11 x64.
+- **Portátil Ligero (`ZeroLatency98-v1.5.1-portable.zip`):** Paquete ultraligero (requiere .NET 9 Desktop Runtime instalado).
 
 ---
 

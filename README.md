@@ -4,7 +4,7 @@
 
 [![GitHub Release](https://img.shields.io/github/v/release/rapabru/ZeroLatency98)](https://github.com/rapabru/ZeroLatency98/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-54%2F54%20Passing-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-57%2F57%20Passing-brightgreen.svg)]()
 [![Platform: Windows 11](https://img.shields.io/badge/Platform-Windows%2011%20x64-blue.svg)]()
 [![Language: English & Spanish](https://img.shields.io/badge/Language-English%20%7C%20Espa%C3%B1ol-informational.svg)]()
 
@@ -14,10 +14,10 @@ A precision latency-reduction and interference-mitigation tool for Windows 11, e
 
 ---
 
-### ⬇️ [Download the Latest Release (v1.5.0)](https://github.com/rapabru/ZeroLatency98/releases/latest)
+### ⬇️ [Download the Latest Release (v1.5.1)](https://github.com/rapabru/ZeroLatency98/releases/latest)
 
-- **Standalone x64 (`ZeroLatency98-v1.5.0-win-x64-standalone.zip`):** Single, self-contained executable. No runtime installations or external dependencies required. Download, extract, and run directly on Windows 11 x64.
-- **Lightweight Portable (`ZeroLatency98-v1.5.0-portable.zip`):** Ultra-small ~600 KB package (requires .NET 9 Desktop Runtime).
+- **Standalone x64 (`ZeroLatency98-v1.5.1-win-x64-standalone.zip`):** Single, self-contained executable. No runtime installations or external dependencies required. Download, extract, and run directly on Windows 11 x64.
+- **Lightweight Portable (`ZeroLatency98-v1.5.1-portable.zip`):** Ultra-small ~600 KB package (requires .NET 9 Desktop Runtime).
 
 ---
 

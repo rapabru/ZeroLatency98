@@ -72,8 +72,12 @@ public class ExportManager
                 return null;
 
             var validated = new List<SmartProfile>();
-            foreach (var profile in loaded)
+            // Enforce maximum collection capacity to prevent memory resource exhaustion (ZL98-SEC-08)
+            foreach (var profile in loaded.Take(100))
             {
+                if (validated.Count >= 100)
+                    break;
+
                 if (string.IsNullOrWhiteSpace(profile.Name))
                     continue;
 

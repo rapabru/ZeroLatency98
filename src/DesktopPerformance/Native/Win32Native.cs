@@ -220,11 +220,8 @@ public static class Win32Native
     #endregion
 
     #region Ntdll
-    [DllImport("ntdll.dll", SetLastError = true)]
-    public static extern int NtSuspendProcess(IntPtr processHandle);
-
-    [DllImport("ntdll.dll", SetLastError = true)]
-    public static extern int NtResumeProcess(IntPtr processHandle);
+    // Note: Undocumented NtSuspendProcess and NtResumeProcess were permanently removed (ZL98-SEC-06)
+    // in favor of standard Win32 QoS background mode (SetPriorityClass PROCESS_MODE_BACKGROUND_BEGIN).
 
     [DllImport("ntdll.dll", SetLastError = true)]
     public static extern int NtQueryTimerResolution(out uint MinimumResolution, out uint MaximumResolution, out uint CurrentResolution);
